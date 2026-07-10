@@ -7,340 +7,350 @@
 // ============================================
 
 // 🔑 PEGAR AQUÍ TU URL DE GOOGLE APPS SCRIPT
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyev686okgRpuIf4nRC1lpvqDNFK-It7imerTJZFn34xvmQ-vHOdmhRwPYyEBzRga-z/exec';
+const GOOGLE_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbyev686okgRpuIf4nRC1lpvqDNFK-It7imerTJZFn34xvmQ-vHOdmhRwPYyEBzRga-z/exec";
 
 // ============================================
 // CLASE PRINCIPAL DE BASE DE DATOS
 // ============================================
 class Database {
+  constructor() {
+    this.googleURL = GOOGLE_SCRIPT_URL;
+    this.token = window.ENV?.SECRET_TOKEN ?? "abc123xyz789"; // Token de seguridad para validar peticiones
+    this.isOnline = navigator.onLine;
+    this.pendingSync = [];
 
-    constructor() {
-        this.googleURL = GOOGLE_SCRIPT_URL;
-        this.isOnline = navigator.onLine;
-        this.pendingSync = [];
+    // Escuchar cambios de conexión
+    window.addEventListener("online", () => {
+      this.isOnline = true;
+      this.syncPendientes();
+    });
+    window.addEventListener("offline", () => {
+      this.isOnline = false;
+    });
+  }
 
-        // Escuchar cambios de conexión
-        window.addEventListener('online', () => {
-            this.isOnline = true;
-            this.syncPendientes();
+  // ============================================
+  // RESERVAS
+  // ============================================
+
+  async crearReserva(datos) {
+    // Generar código único
+    const codigo = "RES-" + Date.now().toString(36).toUpperCase().slice(-6);
+    const reserva = {
+      ...datos,
+      codigo,
+      estado: "confirmada",
+      timestamp: new Date().toISOString(),
+    };
+
+    // 1. Guardar en localStorage siempre (respaldo)
+    this.guardarLocal("reservas", reserva);
+
+    // 2. Intentar guardar en Google Sheets
+    try {
+      const response = await this.postGoogle({
+        action: "nuevaReserva",
+        ...reserva,
+      });
+
+      if (response.status === "success") {
+        console.log("✅ Reserva guardada en Google Sheets");
+        return { success: true, codigo: response.codigo || codigo };
+      }
+    } catch (error) {
+      console.warn("⚠️ Sin conexión a Google Sheets, guardado localmente");
+      this.agregarPendiente("nuevaReserva", reserva);
+    }
+
+    return { success: true, codigo, offline: true };
+  }
+
+  async obtenerReservas(filtros = {}) {
+    // 1. Intentar obtener de Google Sheets
+    try {
+      const params = new URLSearchParams({
+        action: "getReservas",
+        ...filtros,
+      });
+
+      const response = await this.getGoogle(params);
+
+      if (response.status === "success") {
+        // Actualizar cache local
+        localStorage.setItem(
+          "reservas_cache",
+          JSON.stringify(response.reservas),
+        );
+        localStorage.setItem("reservas_cache_time", Date.now().toString());
+        return response.reservas;
+      }
+    } catch (error) {
+      console.warn("⚠️ Usando datos locales");
+    }
+
+    // 2. Fallback: localStorage
+    return this.obtenerLocal("reservas");
+  }
+
+  async actualizarEstadoReserva(codigo, estado) {
+    // 1. Actualizar localmente
+    this.actualizarLocal("reservas", "codigo", codigo, { estado });
+
+    // 2. Intentar actualizar en Google Sheets
+    try {
+      const response = await this.postGoogle({
+        action: "actualizarReserva",
+        codigo,
+        estado,
+      });
+      return response.status === "success";
+    } catch (error) {
+      this.agregarPendiente("actualizarReserva", { codigo, estado });
+      return true; // Éxito local
+    }
+  }
+
+  // ============================================
+  // CONTACTOS
+  // ============================================
+
+  async crearContacto(datos) {
+    const contacto = {
+      ...datos,
+      timestamp: new Date().toISOString(),
+    };
+
+    this.guardarLocal("contactos", contacto);
+
+    try {
+      await this.postGoogle({
+        action: "nuevoContacto",
+        ...contacto,
+      });
+      console.log("✅ Contacto guardado en Google Sheets");
+    } catch (error) {
+      this.agregarPendiente("nuevoContacto", contacto);
+    }
+
+    return { success: true };
+  }
+
+  async obtenerContactos() {
+    try {
+      const params = new URLSearchParams({ action: "getContactos" });
+      const response = await this.getGoogle(params);
+      if (response.status === "success") return response.contactos;
+    } catch (error) {}
+
+    return this.obtenerLocal("contactos");
+  }
+
+  // ============================================
+  // ESTADÍSTICAS
+  // ============================================
+
+  async obtenerStats() {
+    try {
+      const params = new URLSearchParams({ action: "getStats" });
+      const response = await this.getGoogle(params);
+      if (response.status === "success") return response.stats;
+    } catch (error) {}
+
+    // Fallback: calcular desde localStorage
+    return this.calcularStatsLocal();
+  }
+
+  calcularStatsLocal() {
+    const reservas = this.obtenerLocal("reservas");
+    const hoy = new Date().toISOString().split("T")[0];
+
+    const reservasHoy = reservas.filter((r) => r.fecha === hoy);
+
+    return {
+      totalReservas: reservas.length,
+      reservasHoy: reservasHoy.length,
+      personasHoy: reservasHoy.reduce(
+        (sum, r) => sum + parseInt(r.personas || 0),
+        0,
+      ),
+      pendientes: reservas.filter((r) => r.estado === "pendiente").length,
+      confirmadas: reservas.filter((r) => r.estado === "confirmada").length,
+      canceladas: reservas.filter((r) => r.estado === "cancelada").length,
+      totalVisitas: parseInt(localStorage.getItem("menu_visits") || "0"),
+    };
+  }
+
+  // ============================================
+  // VISITAS DEL MENÚ
+  // ============================================
+
+  async registrarVisita(pagina = "menu") {
+    // Incrementar contador local
+    const visitas = parseInt(localStorage.getItem("menu_visits") || "0");
+    localStorage.setItem("menu_visits", (visitas + 1).toString());
+
+    // Enviar a Google Sheets (no bloquear)
+    try {
+      this.postGoogle({
+        action: "registrarVisita",
+        pagina,
+        userAgent: navigator.userAgent,
+      });
+    } catch (e) {}
+  }
+
+  // ============================================
+  // COMUNICACIÓN CON GOOGLE SHEETS
+  // ============================================
+
+  async getGoogle(params) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+    params.set('token', this.token); 
+
+    try {
+      const response = await fetch(`${this.googleURL}?${params}`, {
+        method: "GET",
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!response.ok) throw new Error("Error en la respuesta");
+      return await response.json();
+    } catch (error) {
+      clearTimeout(timeout);
+      throw error;
+    }
+  }
+
+  async postGoogle(data) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+    try {
+      const response = await fetch(this.googleURL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        // ✅ Incluir token en CADA petición
+        body: JSON.stringify({ ...data, token: this.token }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return await response.json();
+    } catch (error) {
+      clearTimeout(timeout);
+      throw error;
+    }
+  }
+
+  // ============================================
+  // LOCALSTORAGE (RESPALDO)
+  // ============================================
+
+  guardarLocal(coleccion, item) {
+    try {
+      const datos = JSON.parse(localStorage.getItem(coleccion) || "[]");
+      datos.push(item);
+      localStorage.setItem(coleccion, JSON.stringify(datos));
+    } catch (e) {
+      console.error("Error guardando localmente:", e);
+    }
+  }
+
+  obtenerLocal(coleccion) {
+    try {
+      return JSON.parse(localStorage.getItem(coleccion) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  actualizarLocal(coleccion, campoId, valorId, cambios) {
+    try {
+      const datos = JSON.parse(localStorage.getItem(coleccion) || "[]");
+      const index = datos.findIndex((item) => item[campoId] === valorId);
+      if (index !== -1) {
+        datos[index] = { ...datos[index], ...cambios };
+        localStorage.setItem(coleccion, JSON.stringify(datos));
+      }
+    } catch (e) {
+      console.error("Error actualizando localmente:", e);
+    }
+  }
+
+  eliminarLocal(coleccion, campoId, valorId) {
+    try {
+      const datos = JSON.parse(localStorage.getItem(coleccion) || "[]");
+      const filtrados = datos.filter((item) => item[campoId] !== valorId);
+      localStorage.setItem(coleccion, JSON.stringify(filtrados));
+    } catch (e) {}
+  }
+
+  // ============================================
+  // SINCRONIZACIÓN OFFLINE → ONLINE
+  // ============================================
+
+  agregarPendiente(action, data) {
+    this.pendingSync.push({ action, data, timestamp: Date.now() });
+    localStorage.setItem("pending_sync", JSON.stringify(this.pendingSync));
+    console.log(`📦 Pendiente de sync: ${action}`);
+  }
+
+  async syncPendientes() {
+    const pendientes = JSON.parse(localStorage.getItem("pending_sync") || "[]");
+    if (pendientes.length === 0) return;
+
+    console.log(
+      `🔄 Sincronizando ${pendientes.length} operaciones pendientes...`,
+    );
+
+    const fallidos = [];
+
+    for (const item of pendientes) {
+      try {
+        await this.postGoogle({
+          action: item.action,
+          ...item.data,
         });
-        window.addEventListener('offline', () => {
-            this.isOnline = false;
-        });
+        console.log(`✅ Sincronizado: ${item.action}`);
+      } catch (error) {
+        fallidos.push(item);
+        console.warn(`❌ Fallo al sincronizar: ${item.action}`);
+      }
     }
 
-    // ============================================
-    // RESERVAS
-    // ============================================
+    localStorage.setItem("pending_sync", JSON.stringify(fallidos));
+    this.pendingSync = fallidos;
 
-    async crearReserva(datos) {
-        // Generar código único
-        const codigo = 'RES-' + Date.now().toString(36).toUpperCase().slice(-6);
-        const reserva = {
-            ...datos,
-            codigo,
-            estado: 'confirmada',
-            timestamp: new Date().toISOString()
-        };
-
-        // 1. Guardar en localStorage siempre (respaldo)
-        this.guardarLocal('reservas', reserva);
-
-        // 2. Intentar guardar en Google Sheets
-        try {
-            const response = await this.postGoogle({
-                action: 'nuevaReserva',
-                ...reserva
-            });
-
-            if (response.status === 'success') {
-                console.log('✅ Reserva guardada en Google Sheets');
-                return { success: true, codigo: response.codigo || codigo };
-            }
-        } catch (error) {
-            console.warn('⚠️ Sin conexión a Google Sheets, guardado localmente');
-            this.agregarPendiente('nuevaReserva', reserva);
-        }
-
-        return { success: true, codigo, offline: true };
+    if (fallidos.length === 0) {
+      console.log("🎉 Todo sincronizado correctamente");
     }
+  }
 
-    async obtenerReservas(filtros = {}) {
-        // 1. Intentar obtener de Google Sheets
-        try {
-            const params = new URLSearchParams({
-                action: 'getReservas',
-                ...filtros
-            });
+  // ============================================
+  // ESTADO DE CONEXIÓN
+  // ============================================
 
-            const response = await this.getGoogle(params);
-
-            if (response.status === 'success') {
-                // Actualizar cache local
-                localStorage.setItem('reservas_cache', JSON.stringify(response.reservas));
-                localStorage.setItem('reservas_cache_time', Date.now().toString());
-                return response.reservas;
-            }
-        } catch (error) {
-            console.warn('⚠️ Usando datos locales');
-        }
-
-        // 2. Fallback: localStorage
-        return this.obtenerLocal('reservas');
+  async verificarConexion() {
+    try {
+      const params = new URLSearchParams({ action: "ping" });
+      const response = await this.getGoogle(params);
+      return response.status === "ok";
+    } catch {
+      return false;
     }
+  }
 
-    async actualizarEstadoReserva(codigo, estado) {
-        // 1. Actualizar localmente
-        this.actualizarLocal('reservas', 'codigo', codigo, { estado });
-
-        // 2. Intentar actualizar en Google Sheets
-        try {
-            const response = await this.postGoogle({
-                action: 'actualizarReserva',
-                codigo,
-                estado
-            });
-            return response.status === 'success';
-        } catch (error) {
-            this.agregarPendiente('actualizarReserva', { codigo, estado });
-            return true; // Éxito local
-        }
-    }
-
-    // ============================================
-    // CONTACTOS
-    // ============================================
-
-    async crearContacto(datos) {
-        const contacto = {
-            ...datos,
-            timestamp: new Date().toISOString()
-        };
-
-        this.guardarLocal('contactos', contacto);
-
-        try {
-            await this.postGoogle({
-                action: 'nuevoContacto',
-                ...contacto
-            });
-            console.log('✅ Contacto guardado en Google Sheets');
-        } catch (error) {
-            this.agregarPendiente('nuevoContacto', contacto);
-        }
-
-        return { success: true };
-    }
-
-    async obtenerContactos() {
-        try {
-            const params = new URLSearchParams({ action: 'getContactos' });
-            const response = await this.getGoogle(params);
-            if (response.status === 'success') return response.contactos;
-        } catch (error) { }
-
-        return this.obtenerLocal('contactos');
-    }
-
-    // ============================================
-    // ESTADÍSTICAS
-    // ============================================
-
-    async obtenerStats() {
-        try {
-            const params = new URLSearchParams({ action: 'getStats' });
-            const response = await this.getGoogle(params);
-            if (response.status === 'success') return response.stats;
-        } catch (error) { }
-
-        // Fallback: calcular desde localStorage
-        return this.calcularStatsLocal();
-    }
-
-    calcularStatsLocal() {
-        const reservas = this.obtenerLocal('reservas');
-        const hoy = new Date().toISOString().split('T')[0];
-
-        const reservasHoy = reservas.filter(r => r.fecha === hoy);
-
-        return {
-            totalReservas: reservas.length,
-            reservasHoy: reservasHoy.length,
-            personasHoy: reservasHoy.reduce((sum, r) => sum + parseInt(r.personas || 0), 0),
-            pendientes: reservas.filter(r => r.estado === 'pendiente').length,
-            confirmadas: reservas.filter(r => r.estado === 'confirmada').length,
-            canceladas: reservas.filter(r => r.estado === 'cancelada').length,
-            totalVisitas: parseInt(localStorage.getItem('menu_visits') || '0')
-        };
-    }
-
-    // ============================================
-    // VISITAS DEL MENÚ
-    // ============================================
-
-    async registrarVisita(pagina = 'menu') {
-        // Incrementar contador local
-        const visitas = parseInt(localStorage.getItem('menu_visits') || '0');
-        localStorage.setItem('menu_visits', (visitas + 1).toString());
-
-        // Enviar a Google Sheets (no bloquear)
-        try {
-            this.postGoogle({
-                action: 'registrarVisita',
-                pagina,
-                userAgent: navigator.userAgent
-            });
-        } catch (e) { }
-    }
-
-    // ============================================
-    // COMUNICACIÓN CON GOOGLE SHEETS
-    // ============================================
-
-    async getGoogle(params) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-        try {
-            const response = await fetch(`${this.googleURL}?${params}`, {
-                method: 'GET',
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-
-            if (!response.ok) throw new Error('Error en la respuesta');
-            return await response.json();
-        } catch (error) {
-            clearTimeout(timeout);
-            throw error;
-        }
-    }
-
-    async postGoogle(data) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-        try {
-            const response = await fetch(this.googleURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: JSON.stringify(data),
-                signal: controller.signal
-            });
-            clearTimeout(timeout);
-
-            if (!response.ok) throw new Error('Error en la respuesta');
-            return await response.json();
-        } catch (error) {
-            clearTimeout(timeout);
-            throw error;
-        }
-    }
-
-    // ============================================
-    // LOCALSTORAGE (RESPALDO)
-    // ============================================
-
-    guardarLocal(coleccion, item) {
-        try {
-            const datos = JSON.parse(localStorage.getItem(coleccion) || '[]');
-            datos.push(item);
-            localStorage.setItem(coleccion, JSON.stringify(datos));
-        } catch (e) {
-            console.error('Error guardando localmente:', e);
-        }
-    }
-
-    obtenerLocal(coleccion) {
-        try {
-            return JSON.parse(localStorage.getItem(coleccion) || '[]');
-        } catch {
-            return [];
-        }
-    }
-
-    actualizarLocal(coleccion, campoId, valorId, cambios) {
-        try {
-            const datos = JSON.parse(localStorage.getItem(coleccion) || '[]');
-            const index = datos.findIndex(item => item[campoId] === valorId);
-            if (index !== -1) {
-                datos[index] = { ...datos[index], ...cambios };
-                localStorage.setItem(coleccion, JSON.stringify(datos));
-            }
-        } catch (e) {
-            console.error('Error actualizando localmente:', e);
-        }
-    }
-
-    eliminarLocal(coleccion, campoId, valorId) {
-        try {
-            const datos = JSON.parse(localStorage.getItem(coleccion) || '[]');
-            const filtrados = datos.filter(item => item[campoId] !== valorId);
-            localStorage.setItem(coleccion, JSON.stringify(filtrados));
-        } catch (e) { }
-    }
-
-    // ============================================
-    // SINCRONIZACIÓN OFFLINE → ONLINE
-    // ============================================
-
-    agregarPendiente(action, data) {
-        this.pendingSync.push({ action, data, timestamp: Date.now() });
-        localStorage.setItem('pending_sync', JSON.stringify(this.pendingSync));
-        console.log(`📦 Pendiente de sync: ${action}`);
-    }
-
-    async syncPendientes() {
-        const pendientes = JSON.parse(localStorage.getItem('pending_sync') || '[]');
-        if (pendientes.length === 0) return;
-
-        console.log(`🔄 Sincronizando ${pendientes.length} operaciones pendientes...`);
-
-        const fallidos = [];
-
-        for (const item of pendientes) {
-            try {
-                await this.postGoogle({
-                    action: item.action,
-                    ...item.data
-                });
-                console.log(`✅ Sincronizado: ${item.action}`);
-            } catch (error) {
-                fallidos.push(item);
-                console.warn(`❌ Fallo al sincronizar: ${item.action}`);
-            }
-        }
-
-        localStorage.setItem('pending_sync', JSON.stringify(fallidos));
-        this.pendingSync = fallidos;
-
-        if (fallidos.length === 0) {
-            console.log('🎉 Todo sincronizado correctamente');
-        }
-    }
-
-    // ============================================
-    // ESTADO DE CONEXIÓN
-    // ============================================
-
-    async verificarConexion() {
-        try {
-            const params = new URLSearchParams({ action: 'ping' });
-            const response = await this.getGoogle(params);
-            return response.status === 'ok';
-        } catch {
-            return false;
-        }
-    }
-
-    getEstadoConexion() {
-        const pendientes = JSON.parse(localStorage.getItem('pending_sync') || '[]');
-        return {
-            online: this.isOnline,
-            pendientesDeSincronizar: pendientes.length,
-            ultimaSync: localStorage.getItem('last_sync') || 'nunca'
-        };
-    }
+  getEstadoConexion() {
+    const pendientes = JSON.parse(localStorage.getItem("pending_sync") || "[]");
+    return {
+      online: this.isOnline,
+      pendientesDeSincronizar: pendientes.length,
+      ultimaSync: localStorage.getItem("last_sync") || "nunca",
+    };
+  }
 }
 
 // ============================================
