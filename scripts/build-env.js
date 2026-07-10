@@ -18,7 +18,9 @@ mkdirSync(distDir, { recursive: true });
 
 cpSync('index.html', join(distDir, 'index.html'));
 cpSync('src', join(distDir, 'src'), { recursive: true });
-cpSync('assets', join(distDir, 'assets'), { recursive: true });
+if (existsSync('assets')) {
+  cpSync('assets', join(distDir, 'assets'), { recursive: true });
+}
 cpSync('public', join(distDir, 'public'), { recursive: true });
 
 writeFileSync(join(distDir, 'public', 'env.js'), content);
