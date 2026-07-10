@@ -9,7 +9,23 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
-    <div class="admin-layout">
+    <section class="login-screen" id="loginScreen">
+        <form class="login-card" id="loginForm">
+            <div class="login-icon"><i class="ph ph-shield-check"></i></div>
+            <h1>Acceso admin</h1>
+            <p>Ingresa el PIN para ver reservas, contactos y configuración.</p>
+            <div class="form-group">
+                <label for="adminPin">PIN</label>
+                <input type="password" id="adminPin" class="form-control" inputmode="numeric" autocomplete="current-password" placeholder="1234" required>
+            </div>
+            <p class="form-error" id="loginError" aria-live="polite"></p>
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="ph ph-lock-key-open"></i> Entrar
+            </button>
+        </form>
+    </section>
+
+    <div class="admin-layout" hidden>
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <div class="logo-icon"><i class="ph ph-storefront"></i></div>
@@ -58,6 +74,9 @@
                     <div id="conexion-status" class="connection-pill"></div>
                     <button class="btn btn-outline btn-sm" id="refreshAdmin">
                         <i class="ph ph-arrow-clockwise"></i> Refrescar
+                    </button>
+                    <button class="btn btn-outline btn-sm" id="logoutAdmin">
+                        <i class="ph ph-sign-out"></i> Salir
                     </button>
                 </div>
             </div>
@@ -149,6 +168,44 @@
             <section class="admin-view" id="view-menu" data-title="Menú" data-icon="ph-fork-knife">
                 <div class="card">
                     <div class="card-header">
+                        <h2><i class="ph ph-plus-circle"></i> Agregar platillo</h2>
+                    </div>
+                    <form class="card-body admin-form-grid" id="menuItemForm">
+                        <div class="form-group">
+                            <label for="menuNombre">Nombre</label>
+                            <input id="menuNombre" class="form-control" required placeholder="Ej. Tacos de rib eye">
+                        </div>
+                        <div class="form-group">
+                            <label for="menuCategoria">Categoría</label>
+                            <select id="menuCategoria" class="form-control" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="menuPrecio">Precio</label>
+                            <input id="menuPrecio" class="form-control" type="number" min="0" step="1" required placeholder="180">
+                        </div>
+                        <div class="form-group">
+                            <label for="menuEtiquetas">Etiquetas</label>
+                            <input id="menuEtiquetas" class="form-control" placeholder="popular, chef recomienda">
+                        </div>
+                        <div class="form-group form-span-2">
+                            <label for="menuDescripcion">Descripción</label>
+                            <textarea id="menuDescripcion" class="form-control" rows="3" placeholder="Descripción corta del platillo"></textarea>
+                        </div>
+                        <div class="form-group form-span-2">
+                            <label for="menuImagen">URL de imagen</label>
+                            <input id="menuImagen" class="form-control" type="url" placeholder="https://...">
+                        </div>
+                        <label class="checkbox-row">
+                            <input id="menuDisponible" type="checkbox" checked>
+                            Disponible en menú
+                        </label>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph ph-plus"></i> Agregar platillo
+                        </button>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-header">
                         <h2><i class="ph ph-fork-knife"></i> Menú digital</h2>
                         <span id="menu-info"></span>
                     </div>
@@ -157,6 +214,42 @@
             </section>
 
             <section class="admin-view" id="view-contactos" data-title="Contactos" data-icon="ph-envelope-simple">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ph ph-address-book"></i> Directorio operativo</h2>
+                    </div>
+                    <form class="card-body admin-form-grid" id="directorioForm">
+                        <div class="form-group">
+                            <label for="directorioNombre">Nombre</label>
+                            <input id="directorioNombre" class="form-control" required placeholder="Proveedor, encargado o cliente">
+                        </div>
+                        <div class="form-group">
+                            <label for="directorioTipo">Tipo</label>
+                            <select id="directorioTipo" class="form-control">
+                                <option value="Proveedor">Proveedor</option>
+                                <option value="Cliente">Cliente</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="directorioTelefono">Teléfono</label>
+                            <input id="directorioTelefono" class="form-control" placeholder="+52...">
+                        </div>
+                        <div class="form-group">
+                            <label for="directorioEmail">Email</label>
+                            <input id="directorioEmail" class="form-control" type="email" placeholder="contacto@email.com">
+                        </div>
+                        <div class="form-group form-span-2">
+                            <label for="directorioNotas">Notas</label>
+                            <textarea id="directorioNotas" class="form-control" rows="2" placeholder="Qué provee, horario, condiciones, etc."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph ph-user-plus"></i> Guardar contacto
+                        </button>
+                    </form>
+                    <div id="directorio-container"></div>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <h2><i class="ph ph-envelope-simple"></i> Contactos</h2>
@@ -188,6 +281,40 @@
             <section class="admin-view" id="view-configuracion" data-title="Configuración" data-icon="ph-gear-six">
                 <div class="card">
                     <div class="card-header"><h2><i class="ph ph-sliders-horizontal"></i> Configuración del sistema</h2></div>
+                    <form class="card-body admin-form-grid" id="settingsForm">
+                        <div class="form-group">
+                            <label for="settingNegocio">Nombre del negocio</label>
+                            <input id="settingNegocio" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingWhatsapp">WhatsApp</label>
+                            <input id="settingWhatsapp" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingCapacidad">Capacidad por turno</label>
+                            <input id="settingCapacidad" class="form-control" type="number" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingIntervalo">Intervalo de reservas</label>
+                            <input id="settingIntervalo" class="form-control" type="number" min="15" step="15">
+                        </div>
+                        <div class="form-group form-span-2">
+                            <label for="settingDescripcion">Descripción</label>
+                            <input id="settingDescripcion" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="settingPin">PIN admin</label>
+                            <input id="settingPin" class="form-control" type="password">
+                        </div>
+                        <div class="settings-toggles">
+                            <label class="checkbox-row"><input id="settingAutoConfirmar" type="checkbox"> Auto confirmar reservas</label>
+                            <label class="checkbox-row"><input id="settingEmail" type="checkbox"> Enviar correo</label>
+                            <label class="checkbox-row"><input id="settingCalendario" type="checkbox"> Sugerir calendario</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph ph-floppy-disk"></i> Guardar configuración
+                        </button>
+                    </form>
                     <div class="settings-grid" id="configuracion-container"></div>
                 </div>
             </section>

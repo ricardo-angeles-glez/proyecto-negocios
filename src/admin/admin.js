@@ -1,57 +1,19 @@
 import { db } from '../shared/database.js';
-
-const MENU_DATA = {
-    restaurante: {
-        nombre: 'La Casona',
-        descripcion: 'Cocina mexicana tradicional',
-        moneda: '$',
-        whatsapp: '1234567890'
-    },
-    categorias: [
-        {
-            id: 'entradas',
-            nombre: 'Entradas',
-            items: [
-                { id: 1, nombre: 'Sopa de tortilla', descripcion: 'Caldo de jitomate con tortilla crujiente, aguacate, crema y queso fresco', precio: 95, etiquetas: ['popular'], disponible: true },
-                { id: 2, nombre: 'Guacamole de la casa', descripcion: 'Aguacate fresco con cebolla, cilantro, chile serrano y limón. Servido con totopos', precio: 120, etiquetas: ['vegetariano', 'popular'], disponible: true },
-                { id: 3, nombre: 'Quesadillas de flor de calabaza', descripcion: 'Tortillas de maíz hechas a mano con queso Oaxaca y flor de calabaza', precio: 110, etiquetas: ['vegetariano'], disponible: true }
-            ]
-        },
-        {
-            id: 'principales',
-            nombre: 'Platos principales',
-            items: [
-                { id: 4, nombre: 'Mole poblano', descripcion: 'Pollo bañado en mole de 28 ingredientes, acompañado de arroz rojo y tortillas', precio: 195, etiquetas: ['chef recomienda', 'popular'], disponible: true },
-                { id: 5, nombre: 'Tacos de arrachera', descripcion: 'Tres tacos de arrachera a la parrilla con guacamole, cebolla asada y salsa verde', precio: 175, etiquetas: ['popular'], disponible: true },
-                { id: 6, nombre: 'Enchiladas suizas', descripcion: 'Tortillas rellenas de pollo con salsa verde cremosa, gratinadas con queso', precio: 165, etiquetas: [], disponible: true },
-                { id: 7, nombre: 'Chile en nogada', descripcion: 'Chile poblano relleno de picadillo, bañado en nogada y granada (temporada)', precio: 225, etiquetas: ['chef recomienda'], disponible: true }
-            ]
-        },
-        {
-            id: 'bebidas',
-            nombre: 'Bebidas',
-            items: [
-                { id: 8, nombre: 'Agua de horchata', descripcion: 'Bebida tradicional de arroz con canela y un toque de vainilla', precio: 55, etiquetas: ['refrescante'], disponible: true },
-                { id: 9, nombre: 'Jamaica', descripcion: 'Infusión fría de flor de jamaica con un toque de limón', precio: 50, etiquetas: ['refrescante'], disponible: true },
-                { id: 10, nombre: 'Café de olla', descripcion: 'Café preparado con piloncillo, canela y clavo en olla de barro', precio: 45, etiquetas: [], disponible: true }
-            ]
-        },
-        {
-            id: 'postres',
-            nombre: 'Postres',
-            items: [
-                { id: 11, nombre: 'Flan napolitano', descripcion: 'Flan casero con caramelo, preparado con la receta de la abuela', precio: 85, etiquetas: ['popular'], disponible: true },
-                { id: 12, nombre: 'Churros con chocolate', descripcion: 'Churros recién hechos con chocolate caliente para dipping', precio: 95, etiquetas: ['chef recomienda'], disponible: true }
-            ]
-        }
-    ]
-};
+import {
+    getMenuData,
+    getMenuItems as getStoredMenuItems,
+    getSettings,
+    saveSettings,
+    updateMenuItemAvailability,
+    upsertMenuItem
+} from '../shared/menu-store.js';
 
 const adminState = {
     currentView: 'dashboard',
     reservas: [],
     contactos: [],
-    menuOverrides: JSON.parse(localStorage.getItem('admin_menu_overrides') || '{}'),
+    directorio: JSON.parse(localStorage.getItem('admin_contact_directory') || '[]'),
+    settings: getSettings(),
     stats: {},
     filtros: {
         estado: 'all',
@@ -61,18 +23,20 @@ const adminState = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    inicializarAdmin();
+    initAuth();
 });
 
 async function inicializarAdmin() {
     pintarFechaActual();
     initNavegacion();
     initFiltros();
+    initForms();
     document.getElementById('refreshAdmin')?.addEventListener('click', cargarDashboard);
 
     cambiarVista(getViewFromHash());
     renderMenuAdmin();
     renderConfiguracion();
+    renderDirectorio();
 
     await Promise.all([
         verificarConexion(),
@@ -80,6 +44,101 @@ async function inicializarAdmin() {
     ]);
 
     setInterval(cargarDashboard, 60000);
+}
+
+function initForms() {
+    document.getElementById('menuItemForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        upsertMenuItem({
+            nombre: getValue('menuNombre'),
+            categoria: getValue('menuCategoria'),
+            precio: getValue('menuPrecio'),
+            etiquetas: getValue('menuEtiquetas'),
+            descripcion: getValue('menuDescripcion'),
+            imagen: getValue('menuImagen'),
+            disponible: Boolean(document.getElementById('menuDisponible')?.checked)
+        });
+        event.target.reset();
+        document.getElementById('menuDisponible').checked = true;
+        renderMenuAdmin();
+        renderMenuCategoryOptions();
+        renderAnalytics();
+    });
+
+    document.getElementById('directorioForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        adminState.directorio.unshift({
+            id: Date.now(),
+            nombre: getValue('directorioNombre'),
+            tipo: getValue('directorioTipo'),
+            telefono: getValue('directorioTelefono'),
+            email: getValue('directorioEmail'),
+            notas: getValue('directorioNotas'),
+            creado: new Date().toISOString()
+        });
+        localStorage.setItem('admin_contact_directory', JSON.stringify(adminState.directorio));
+        event.target.reset();
+        renderDirectorio();
+    });
+
+    document.getElementById('settingsForm')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        adminState.settings = saveSettings({
+            negocio: getValue('settingNegocio'),
+            descripcion: getValue('settingDescripcion'),
+            whatsapp: getValue('settingWhatsapp'),
+            capacidad: Number(getValue('settingCapacidad') || 0),
+            intervaloReservas: Number(getValue('settingIntervalo') || 0),
+            adminPin: getValue('settingPin') || adminState.settings.adminPin,
+            autoConfirmar: Boolean(document.getElementById('settingAutoConfirmar')?.checked),
+            emailConfirmacion: Boolean(document.getElementById('settingEmail')?.checked),
+            calendarioCliente: Boolean(document.getElementById('settingCalendario')?.checked)
+        });
+        renderConfiguracion();
+        renderMenuAdmin();
+    });
+
+    renderMenuCategoryOptions();
+    hydrateSettingsForm();
+}
+
+function initAuth() {
+    const isAuthenticated = sessionStorage.getItem('admin_authenticated') === 'true';
+    const loginScreen = document.getElementById('loginScreen');
+    const adminLayout = document.querySelector('.admin-layout');
+    const loginForm = document.getElementById('loginForm');
+    const logoutBtn = document.getElementById('logoutAdmin');
+
+    if (isAuthenticated) {
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (adminLayout) adminLayout.hidden = false;
+        inicializarAdmin();
+    } else {
+        if (loginScreen) loginScreen.style.display = 'grid';
+        if (adminLayout) adminLayout.hidden = true;
+    }
+
+    loginForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const pin = document.getElementById('adminPin')?.value || '';
+        const error = document.getElementById('loginError');
+        adminState.settings = getSettings();
+
+        if (pin === String(adminState.settings.adminPin || '1234')) {
+            sessionStorage.setItem('admin_authenticated', 'true');
+            if (loginScreen) loginScreen.style.display = 'none';
+            if (adminLayout) adminLayout.hidden = false;
+            inicializarAdmin();
+            return;
+        }
+
+        if (error) error.textContent = 'PIN incorrecto';
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+        sessionStorage.removeItem('admin_authenticated');
+        window.location.href = '../landing/';
+    });
 }
 
 function initNavegacion() {
@@ -311,26 +370,25 @@ function renderMenuAdmin() {
     const info = document.getElementById('menu-info');
     if (!container) return;
 
+    const data = getMenuData();
     const items = getMenuItems();
     const activos = items.filter((item) => item.disponible).length;
     setText('stat-menu-activos', activos);
     if (info) info.textContent = `${activos} activos de ${items.length}`;
 
-    container.innerHTML = `<div class="menu-admin-list">${MENU_DATA.categorias.map((categoria) => `
+    container.innerHTML = `<div class="menu-admin-list">${data.categorias.map((categoria) => `
         <section class="menu-category-admin">
             <header>
                 <h3>${escapeHTML(categoria.nombre)}</h3>
                 <span>${categoria.items.length} platillos</span>
             </header>
-            ${categoria.items.map((item) => renderMenuItemAdmin(aplicarMenuOverride(item))).join('')}
+            ${categoria.items.map((item) => renderMenuItemAdmin(item)).join('')}
         </section>
     `).join('')}</div>`;
 
     container.querySelectorAll('[data-menu-toggle]').forEach((input) => {
         input.addEventListener('change', () => {
-            const id = input.dataset.menuToggle;
-            adminState.menuOverrides[id] = { disponible: input.checked };
-            localStorage.setItem('admin_menu_overrides', JSON.stringify(adminState.menuOverrides));
+            updateMenuItemAvailability(input.dataset.menuToggle, input.checked);
             renderMenuAdmin();
             renderAnalytics();
         });
@@ -354,6 +412,43 @@ function renderMenuItemAdmin(item) {
             </div>
         </article>
     `;
+}
+
+function renderMenuCategoryOptions() {
+    const select = document.getElementById('menuCategoria');
+    if (!select) return;
+
+    const data = getMenuData();
+    select.innerHTML = data.categorias.map((categoria) => (
+        `<option value="${escapeAttribute(categoria.id)}">${escapeHTML(categoria.nombre)}</option>`
+    )).join('');
+}
+
+function renderDirectorio() {
+    const container = document.getElementById('directorio-container');
+    if (!container) return;
+
+    if (!adminState.directorio.length) {
+        container.innerHTML = emptyHTML('ph-address-book', 'Sin contactos operativos', 'Agrega proveedores, clientes frecuentes o personal clave.', true);
+        return;
+    }
+
+    container.innerHTML = `<div class="contact-list">${adminState.directorio.map((contacto) => `
+        <article class="contact-item">
+            <div class="contact-avatar"><i class="ph ph-buildings"></i></div>
+            <div class="contact-body">
+                <div class="contact-meta">
+                    <strong>${escapeHTML(contacto.nombre)}</strong>
+                    <span>${escapeHTML(contacto.tipo)}</span>
+                </div>
+                <div class="contact-actions-line">
+                    ${contacto.telefono ? `<a href="https://wa.me/${escapeAttribute(contacto.telefono.replace(/\D/g, ''))}" target="_blank">${escapeHTML(contacto.telefono)}</a>` : ''}
+                    ${contacto.email ? `<a href="mailto:${escapeAttribute(contacto.email)}">${escapeHTML(contacto.email)}</a>` : ''}
+                </div>
+                <p>${escapeHTML(contacto.notas || '')}</p>
+            </div>
+        </article>
+    `).join('')}</div>`;
 }
 
 function renderAnalytics() {
@@ -390,12 +485,16 @@ function renderConfiguracion() {
     if (!container) return;
 
     const env = window.ENV || {};
+    adminState.settings = getSettings();
+    hydrateSettingsForm();
     const rows = [
         ['Google Apps Script', env.GOOGLE_SCRIPT_URL ? 'Configurado' : 'Pendiente', env.GOOGLE_SCRIPT_URL || 'Sin URL pública'],
         ['Token de seguridad', env.SECRET_TOKEN ? 'Configurado' : 'Pendiente', env.SECRET_TOKEN ? 'Disponible en build' : 'Sin token público'],
-        ['WhatsApp', env.WHATSAPP || MENU_DATA.restaurante.whatsapp, 'Número usado para mensajes'],
-        ['Nombre del negocio', env.NOMBRE_NEGOCIO || MENU_DATA.restaurante.nombre, 'Nombre usado en confirmaciones'],
-        ['Resend', 'Serverless', 'Configurar RESEND_API_KEY en Vercel para correo automático']
+        ['WhatsApp', adminState.settings.whatsapp, 'Número usado para mensajes'],
+        ['Nombre del negocio', adminState.settings.negocio, 'Nombre usado en confirmaciones'],
+        ['Capacidad', `${adminState.settings.capacidad} personas`, 'Control operativo por turno'],
+        ['Confirmación', adminState.settings.autoConfirmar ? 'Automática' : 'Manual', 'Estado inicial de nuevas reservas'],
+        ['Resend', env.RESEND_FROM ? 'Configurado' : 'Pendiente', 'Configurar RESEND_FROM y RESEND_API_KEY en Vercel']
     ];
 
     container.innerHTML = rows.map(([title, value, detail]) => `
@@ -407,6 +506,19 @@ function renderConfiguracion() {
             <span>${escapeHTML(value)}</span>
         </div>
     `).join('');
+}
+
+function hydrateSettingsForm() {
+    const settings = getSettings();
+    setValue('settingNegocio', settings.negocio);
+    setValue('settingDescripcion', settings.descripcion);
+    setValue('settingWhatsapp', settings.whatsapp);
+    setValue('settingCapacidad', settings.capacidad);
+    setValue('settingIntervalo', settings.intervaloReservas);
+    setValue('settingPin', settings.adminPin);
+    setChecked('settingAutoConfirmar', settings.autoConfirmar);
+    setChecked('settingEmail', settings.emailConfirmacion);
+    setChecked('settingCalendario', settings.calendarioCliente);
 }
 
 function aplicarFiltros(reservas) {
@@ -548,11 +660,7 @@ function exportarReservas() {
 }
 
 function getMenuItems() {
-    return MENU_DATA.categorias.flatMap((categoria) => categoria.items.map(aplicarMenuOverride));
-}
-
-function aplicarMenuOverride(item) {
-    return { ...item, ...(adminState.menuOverrides[item.id] || {}) };
+    return getStoredMenuItems();
 }
 
 function contarPor(items, key) {
@@ -603,6 +711,15 @@ function setText(id, value) {
 function setValue(id, value) {
     const el = document.getElementById(id);
     if (el) el.value = value;
+}
+
+function getValue(id) {
+    return document.getElementById(id)?.value?.trim() || '';
+}
+
+function setChecked(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.checked = Boolean(value);
 }
 
 function escapeHTML(value) {

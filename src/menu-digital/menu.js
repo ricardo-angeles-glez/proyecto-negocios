@@ -1,4 +1,5 @@
 import { db } from '../shared/database.js';
+import { getMenuData } from '../shared/menu-store.js';
 
 // ============================================
 // MENÚ DIGITAL - SIN IMPORTS (compatibilidad)
@@ -164,6 +165,7 @@ var searchQuery = '';
 
 // ── Init ───────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+    menuData = getMenuData();
     db.registrarVisita('menu-digital');
     renderHeader();
     renderCategories();

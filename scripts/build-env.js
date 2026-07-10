@@ -6,6 +6,7 @@ const env = {
   WHATSAPP: process.env.WHATSAPP || '',
   NOMBRE_NEGOCIO: process.env.NOMBRE_NEGOCIO || '',
   SECRET_TOKEN: process.env.SECRET_TOKEN || '',
+  RESEND_FROM: process.env.RESEND_FROM || '',
 };
 
 const content = `// Generado en build por scripts/build-env.js
