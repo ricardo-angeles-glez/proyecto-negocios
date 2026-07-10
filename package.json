@@ -1,0 +1,36 @@
+{
+  "name": "proyecto-negocios",
+  "version": "1.0.0",
+  "description": "Sistema completo: Landing Pages, Menús Digitales y Reservas con costo $0",
+  "author": "ricardo-angeles-glez",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve . -p 3000 --no-clipboard",
+    "build": "echo 'Proyecto estático - no requiere build'",
+    "preview": "npx serve . -p 4000",
+    "lint": "npx eslint src/**/*.js",
+    "format": "npx prettier --write 'src/**/*.{html,css,js,json}'",
+    "tree": "node tree.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1",
+    "prettier": "^3.1.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "landing-page",
+    "menu-digital",
+    "reservas",
+    "restaurante",
+    "supabase",
+    "vercel"
+  ]
+}

@@ -1,0 +1,86 @@
+<!-- menu-digital/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Digital</title>
+    <link rel="stylesheet" href="menu.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="menu-app">
+        <!-- HEADER -->
+        <header class="menu-header">
+            <div class="restaurant-info">
+                <span class="restaurant-logo" id="restaurantLogo"></span>
+                <h1 id="restaurantName"></h1>
+                <p id="restaurantDesc"></p>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar platillos...">
+            </div>
+        </header>
+
+        <!-- FILTROS DE CATEGORÍA -->
+        <nav class="category-nav" id="categoryNav">
+            <button class="category-btn active" data-category="all">
+                🍴 Todos
+            </button>
+            <!-- Se generan dinámicamente -->
+        </nav>
+
+        <!-- FILTROS ETIQUETAS -->
+        <div class="tag-filters" id="tagFilters">
+            <button class="tag-btn active" data-tag="all">Todos</button>
+            <button class="tag-btn" data-tag="vegetariano">🌱 Vegetariano</button>
+            <button class="tag-btn" data-tag="popular">⭐ Popular</button>
+            <button class="tag-btn" data-tag="chef recomienda">👨‍🍳 Chef Recomienda</button>
+            <button class="tag-btn" data-tag="saludable">💚 Saludable</button>
+        </div>
+
+        <!-- LISTA DE PLATILLOS -->
+        <main class="menu-content" id="menuContent">
+            <!-- Se genera dinámicamente -->
+        </main>
+
+        <!-- MODAL DETALLE -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal" id="itemModal">
+                <button class="modal-close" id="modalClose">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-image" id="modalImage"></div>
+                <div class="modal-body">
+                    <div class="modal-tags" id="modalTags"></div>
+                    <h2 id="modalName"></h2>
+                    <p id="modalDesc"></p>
+                    <div class="modal-price" id="modalPrice"></div>
+                    <a href="#" class="btn btn-primary btn-full" id="modalWhatsapp">
+                        <i class="fab fa-whatsapp"></i> Pedir por WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÓN QR FLOTANTE -->
+        <button class="fab-qr" id="fabQR" title="Compartir menú">
+            <i class="fas fa-qrcode"></i>
+        </button>
+
+        <!-- MODAL QR -->
+        <div class="qr-modal" id="qrModal">
+            <div class="qr-content">
+                <h3>📱 Escanea el QR</h3>
+                <p>Comparte este menú con tus clientes</p>
+                <img id="qrImage" src="" alt="QR Code">
+                <button class="btn btn-primary" id="closeQR">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="menu.js"></script>
+</body>
+</html>

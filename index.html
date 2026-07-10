@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto Negocios</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1a1a2e;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container { text-align: center; max-width: 900px; width: 100%; }
+        .logo { font-size: 3rem; margin-bottom: 16px; }
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s;
+            display: block;
+        }
+        .card:hover {
+            background: rgba(108,99,255,0.15);
+            border-color: rgba(108,99,255,0.5);
+            transform: translateY(-6px);
+        }
+        .card-icon { font-size: 2.5rem; margin-bottom: 16px; }
+        .card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .card p { font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.5; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(108,99,255,0.3);
+            border-radius: 50px;
+            font-size: 0.7rem;
+            color: #a5a0ff;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+        .version {
+            margin-top: 48px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">◆</div>
+        <h1>Proyecto Negocios</h1>
+        <p class="subtitle">Sistema completo: Landing Pages · Menús Digitales · Reservas</p>
+
+        <div class="grid">
+            <a href="./src/landing/" class="card">
+                <div class="card-icon">🌐</div>
+                <h2>Landing Page</h2>
+                <p>Página de presentación profesional para tu negocio</p>
+                <span class="badge">HTML + CSS</span>
+            </a>
+            <a href="./src/menu-digital/" class="card">
+                <div class="card-icon">🍽️</div>
+                <h2>Menú Digital</h2>
+                <p>Menú interactivo con código QR integrado</p>
+                <span class="badge">+ Supabase</span>
+            </a>
+            <a href="./src/reservas/" class="card">
+                <div class="card-icon">📅</div>
+                <h2>Reservas</h2>
+                <p>Sistema completo de reservas con notificaciones</p>
+                <span class="badge">+ Supabase</span>
+            </a>
+            <a href="./src/admin/dashboard.html" class="card">
+                <div class="card-icon">⚙️</div>
+                <h2>Admin Panel</h2>
+                <p>Panel de control para gestionar todo el sistema</p>
+                <span class="badge">Dashboard</span>
+            </a>
+        </div>
+
+        <p class="version">v1.0.0 · Powered by Vercel + Supabase</p>
+    </div>
+</body>
+</html>
