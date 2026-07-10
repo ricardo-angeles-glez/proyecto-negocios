@@ -1,0 +1,107 @@
+
+{
+    "restaurante": {
+        "nombre": "Tu Restaurante",
+        "logo": "🍽️",
+        "descripcion": "Cocina con pasión desde 2020",
+        "moneda": "$"
+    },
+    "categorias": [
+        {
+            "id": "entradas",
+            "nombre": "🥗 Entradas",
+            "items": [
+                {
+                    "id": 1,
+                    "nombre": "Bruschetta Clásica",
+                    "descripcion": "Pan artesanal con tomate, albahaca fresca y aceite de oliva",
+                    "precio": 8.50,
+                    "imagen": "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=400",
+                    "etiquetas": ["vegetariano", "popular"],
+                    "disponible": true
+                },
+                {
+                    "id": 2,
+                    "nombre": "Carpaccio de Res",
+                    "descripcion": "Láminas finas de res con rúcula, parmesano y limón",
+                    "precio": 12.00,
+                    "imagen": "https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=400",
+                    "etiquetas": ["chef recomienda"],
+                    "disponible": true
+                }
+            ]
+        },
+        {
+            "id": "principales",
+            "nombre": "🥩 Platos Principales",
+            "items": [
+                {
+                    "id": 3,
+                    "nombre": "Risotto de Hongos",
+                    "descripcion": "Arroz arborio con mix de hongos silvestres y trufa",
+                    "precio": 18.00,
+                    "imagen": "https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400",
+                    "etiquetas": ["vegetariano", "popular"],
+                    "disponible": true
+                },
+                {
+                    "id": 4,
+                    "nombre": "Salmón a la Parrilla",
+                    "descripcion": "Filete de salmón con vegetales asados y salsa de eneldo",
+                    "precio": 22.00,
+                    "imagen": "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400",
+                    "etiquetas": ["saludable"],
+                    "disponible": true
+                },
+                {
+                    "id": 5,
+                    "nombre": "Pasta Carbonara",
+                    "descripcion": "Spaghetti con salsa carbonara tradicional y panceta",
+                    "precio": 15.00,
+                    "imagen": "https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400",
+                    "etiquetas": ["popular"],
+                    "disponible": true
+                }
+            ]
+        },
+        {
+            "id": "bebidas",
+            "nombre": "🍷 Bebidas",
+            "items": [
+                {
+                    "id": 6,
+                    "nombre": "Limonada Natural",
+                    "descripcion": "Limonada fresca con menta y hierbabuena",
+                    "precio": 5.00,
+                    "imagen": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400",
+                    "etiquetas": ["refrescante"],
+                    "disponible": true
+                },
+                {
+                    "id": 7,
+                    "nombre": "Café Especial",
+                    "descripcion": "Café de origen single estate con arte latte",
+                    "precio": 4.50,
+                    "imagen": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400",
+                    "etiquetas": ["caliente"],
+                    "disponible": true
+                }
+            ]
+        },
+        {
+            "id": "postres",
+            "nombre": "🍰 Postres",
+            "items": [
+                {
+                    "id": 8,
+                    "nombre": "Tiramisú",
+                    "descripcion": "Clásico italiano con mascarpone y café espresso",
+                    "precio": 9.00,
+                    "imagen": "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400",
+                    "etiquetas": ["chef recomienda", "popular"],
+                    "disponible": true
+                }
+            ]
+        }
+    ]
+}

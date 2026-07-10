@@ -1,0 +1,246 @@
+<!-- reservas/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reservas</title>
+    <link rel="stylesheet" href="reservas.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="reservas-app">
+        <!-- HEADER -->
+        <header class="reservas-header">
+            <a href="../landing/" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="header-content">
+                <h1>📅 Reservar Mesa</h1>
+                <p>Selecciona fecha, hora y número de personas</p>
+            </div>
+        </header>
+
+        <!-- STEPPER -->
+        <div class="stepper">
+            <div class="step active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Fecha</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Hora</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" data-step="3">
+                <span class="step-number">3</span>
+                <span class="step-label">Datos</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step" data-step="4">
+                <span class="step-number">4</span>
+                <span class="step-label">Confirmar</span>
+            </div>
+        </div>
+
+        <!-- FORMULARIO PASO A PASO -->
+        <main class="reservas-content">
+
+            <!-- PASO 1: FECHA Y PERSONAS -->
+            <div class="step-content active" id="step1">
+                <h2>¿Cuándo quieres venir?</h2>
+
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Número de personas</label>
+                    <div class="personas-selector">
+                        <button class="persona-btn" data-personas="1">1</button>
+                        <button class="persona-btn" data-personas="2">2</button>
+                        <button class="persona-btn active" data-personas="3">3</button>
+                        <button class="persona-btn" data-personas="4">4</button>
+                        <button class="persona-btn" data-personas="5">5</button>
+                        <button class="persona-btn" data-personas="6">6+</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Fecha</label>
+                    <div class="calendar" id="calendar">
+                        <div class="calendar-header">
+                            <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                            <span id="currentMonth"></span>
+                            <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <span>Do</span><span>Lu</span><span>Ma</span>
+                            <span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span>
+                        </div>
+                        <div class="calendar-days" id="calendarDays"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="toStep2" disabled>
+                    Continuar <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- PASO 2: HORA -->
+            <div class="step-content" id="step2">
+                <h2>¿A qué hora?</h2>
+                <p class="step-info" id="selectedDateInfo"></p>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sun"></i> Almuerzo</label>
+                    <div class="time-grid">
+                        <button class="time-btn" data-time="12:00">12:00</button>
+                        <button class="time-btn" data-time="12:30">12:30</button>
+                        <button class="time-btn" data-time="13:00">13:00</button>
+                        <button class="time-btn" data-time="13:30">13:30</button>
+                        <button class="time-btn" data-time="14:00">14:00</button>
+                        <button class="time-btn" data-time="14:30">14:30</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-moon"></i> Cena</label>
+                    <div class="time-grid">
+                        <button class="time-btn" data-time="19:00">19:00</button>
+                        <button class="time-btn" data-time="19:30">19:30</button>
+                        <button class="time-btn" data-time="20:00">20:00</button>
+                        <button class="time-btn" data-time="20:30">20:30</button>
+                        <button class="time-btn" data-time="21:00">21:00</button>
+                        <button class="time-btn" data-time="21:30">21:30</button>
+                    </div>
+                </div>
+
+                <div class="step-buttons">
+                    <button class="btn btn-outline" id="backToStep1">
+                        <i class="fas fa-arrow-left"></i> Atrás
+                    </button>
+                    <button class="btn btn-primary" id="toStep3" disabled>
+                        Continuar <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASO 3: DATOS PERSONALES -->
+            <div class="step-content" id="step3">
+                <h2>Tus datos</h2>
+                <p class="step-info" id="selectedTimeInfo"></p>
+
+                <form id="reservaForm">
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="nombre" required placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono *</label>
+                        <input type="tel" id="telefono" required placeholder="+1 234 567 890">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email" placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Notas especiales</label>
+                        <textarea id="notas" rows="3"
+                            placeholder="Alergias, celebraciones, preferencia de mesa..."></textarea>
+                    </div>
+                </form>
+
+                <div class="step-buttons">
+                    <button class="btn btn-outline" id="backToStep2">
+                        <i class="fas fa-arrow-left"></i> Atrás
+                    </button>
+                    <button class="btn btn-primary" id="toStep4">
+                        Revisar <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASO 4: CONFIRMACIÓN -->
+            <div class="step-content" id="step4">
+                <h2>Confirma tu reserva</h2>
+
+                <div class="reserva-summary">
+                    <div class="summary-item">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <span class="summary-label">Fecha</span>
+                            <span class="summary-value" id="summaryDate"></span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <span class="summary-label">Hora</span>
+                            <span class="summary-value" id="summaryTime"></span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <span class="summary-label">Personas</span>
+                            <span class="summary-value" id="summaryPersonas"></span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-user"></i>
+                        <div>
+                            <span class="summary-label">Nombre</span>
+                            <span class="summary-value" id="summaryNombre"></span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <span class="summary-label">Teléfono</span>
+                            <span class="summary-value" id="summaryTelefono"></span>
+                        </div>
+                    </div>
+                    <div class="summary-item" id="summaryNotasContainer" style="display:none">
+                        <i class="fas fa-sticky-note"></i>
+                        <div>
+                            <span class="summary-label">Notas</span>
+                            <span class="summary-value" id="summaryNotas"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-buttons">
+                    <button class="btn btn-outline" id="backToStep3">
+                        <i class="fas fa-arrow-left"></i> Atrás
+                    </button>
+                    <button class="btn btn-primary" id="confirmReserva">
+                        <i class="fas fa-check"></i> Confirmar Reserva
+                    </button>
+                </div>
+            </div>
+
+            <!-- PASO 5: ÉXITO -->
+            <div class="step-content" id="step5">
+                <div class="success-container">
+                    <div class="success-icon">✅</div>
+                    <h2>¡Reserva Confirmada!</h2>
+                    <p>Te hemos enviado los detalles por WhatsApp</p>
+                    <div class="reserva-code">
+                        <span>Código de reserva:</span>
+                        <strong id="reservaCode"></strong>
+                    </div>
+                    <div class="success-actions">
+                        <a href="#" class="btn btn-primary btn-full" id="addToCalendar">
+                            <i class="fas fa-calendar-plus"></i> Agregar al Calendario
+                        </a>
+                        <button class="btn btn-outline btn-full" id="newReserva">
+                            <i class="fas fa-plus"></i> Nueva Reserva
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="reservas.js"></script>
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!-- admin/dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+        }
+
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: #1a1a2e;
+            color: white;
+            padding: 24px;
+        }
+
+        .sidebar-logo {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav { list-style: none; }
+        .sidebar-nav li {
+            margin-bottom: 4px;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: rgba(108,99,255,0.2);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 { font-size: 1.5rem; }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .stat-card-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        /* Table */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 { font-size: 1.1rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 24px;
+            text-align: left;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        td { font-size: 0.9rem; }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-confirmada {
+            background: rgba(0,212,170,0.1);
+            color: #00D4AA;
+        }
+
+        .status-pendiente {
+            background: rgba(255,193,7,0.1);
+            color: #FFC107;
+        }
+
+        .status-cancelada {
+            background: rgba(255,107,107,0.1);
+            color: #FF6B6B;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <span>◆</span> Admin Panel
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#"><i class="fas fa-calendar"></i> Reservas</a></li>
+                <li><a href="#"><i class="fas fa-utensils"></i> Menú</a></li>
+                <li><a href="#"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Configuración</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>📊 Dashboard</h1>
+                <span id="currentDate"></span>
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-label">Reservas Hoy</span>
+                        <div class="stat-card-icon" style="background: rgba(108,99,255,0.1); color: #6C63FF;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="reservasHoy">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-label">Total Reservas</span>
+                        <div class="stat-card-icon" style="background: rgba(0,212,170,0.1); color: #00D4AA;">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="totalReservas">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-label">Personas Hoy</span>
+                        <div class="stat-card-icon" style="background: rgba(255,107,107,0.1); color: #FF6B6B;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="personasHoy">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-label">Visitas Menú</span>
+                        <div class="stat-card-icon" style="background: rgba(255,193,7,0.1); color: #FFC107;">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="visitasMenu">0</div>
+                </div>
+            </div>
+
+            <!-- TABLA DE RESERVAS -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Últimas Reservas</h2>
+                    <button class="action-btn" onclick="exportReservas()">
+                        <i class="fas fa-download"></i> Exportar
+                    </button>
+                </div>
+                <div id="reservasTable"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Fecha actual
+        document.getElementById('currentDate').textContent =
+            new Date().toLocaleDateString('es-ES', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+        // Cargar reservas
+        function loadReservas() {
+            const reservas = JSON.parse(localStorage.getItem('reservas') || '[]');
+            const today = new Date().toDateString();
+
+            // Stats
+            const reservasHoy = reservas.filter(r => {
+                return new Date(r.fecha).toDateString() === today;
+            });
+
+            document.getElementById('totalReservas').textContent = reservas.length;
+            document.getElementById('reservasHoy').textContent = reservasHoy.length;
+            document.getElementById('personasHoy').textContent =
+                reservasHoy.reduce((sum, r) => sum + parseInt(r.personas), 0);
+            document.getElementById('visitasMenu').textContent =
+                localStorage.getItem('menuVisits') || '0';
+
+            // Tabla
+            const container = document.getElementById('reservasTable');
+
+            if (reservas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times" style="font-size:2rem;margin-bottom:12px;color:#e9ecef;"></i>
+                        <p>No hay reservas aún</p>
+                    </div>`;
+                return;
+            }
+
+            const sortedReservas = [...reservas].reverse();
+
+            container.innerHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Personas</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedReservas.map(r => `
+                            <tr>
+                                <td><strong>${r.codigo}</strong></td>
+                                <td>${r.nombre}</td>
+                                <td>${new Date(r.fecha).toLocaleDateString('es-ES')}</td>
+                                <td>${r.hora}</td>
+                                <td>${r.personas}</td>
+                                <td>
+                                    <span class="status-badge status-${r.estado}">
+                                        ${r.estado}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="action-btn" onclick="cancelarReserva('${r.codigo}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        function cancelarReserva(codigo) {
+            if (!confirm('¿Cancelar esta reserva?')) return;
+
+            const reservas = JSON.parse(localStorage.getItem('reservas') || '[]');
+            const index = reservas.findIndex(r => r.codigo === codigo);
+            if (index !== -1) {
+                reservas[index].estado = 'cancelada';
+                localStorage.setItem('reservas', JSON.stringify(reservas));
+                loadReservas();
+            }
+        }
+
+        function exportReservas() {
+            const reservas = JSON.parse(localStorage.getItem('reservas') || '[]');
+            const csv = [
+                'Código,Nombre,Teléfono,Email,Fecha,Hora,Personas,Notas,Estado',
+                ...reservas.map(r =>
+                    `${r.codigo},${r.nombre},${r.telefono},${r.email},${new Date(r.fecha).toLocaleDateString()},${r.hora},${r.personas},"${r.notas || ''}",${r.estado}`
+                )
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reservas_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        loadReservas();
+
+        // Auto-refresh cada 30 segundos
+        setInterval(loadReservas, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+/* reservas/reservas.css */
+
+:root {
+    --primary: #6C63FF;
+    --primary-light: rgba(108,99,255,0.1);
+    --secondary: #FF6B6B;
+    --accent: #00D4AA;
+    --dark: #1a1a2e;
+    --light: #ffffff;
+    --light-2: #f8f9fa;
+    --light-3: #e9ecef;
+    --gray: #6c757d;
+    --shadow: 0 4px 15px rgba(0,0,0,0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: all 0.3s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--light-2);
+    color: var(--dark);
+}
+
+.reservas-app {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--light);
+}
+
+/* ============ HEADER ============ */
+.reservas-header {
+    background: linear-gradient(135deg, var(--dark), #2a2a4a);
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.header-content h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.header-content p {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+}
+
+/* ============ STEPPER ============ */
+.stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    gap: 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--light-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--gray);
+    transition: var(--transition);
+}
+
+.step.active .step-number {
+    background: var(--primary);
+    color: white;
+}
+
+.step.completed .step-number {
+    background: var(--accent);
+    color: white;
+}
+
+.step-label {
+    font-size: 0.7rem;
+    color: var(--gray);
+    font-weight: 600;
+}
+
+.step.active .step-label {
+    color: var(--primary);
+}
+
+.step-line {
+    width: 40px;
+    height: 2px;
+    background: var(--light-3);
+    margin: 0 8px;
+    margin-bottom: 18px;
+    transition: var(--transition);
+}
+
+.step-line.active {
+    background: var(--primary);
+}
+
+/* ============ CONTENIDO ============ */
+.reservas-content {
+    padding: 0 20px 40px;
+}
+
+.step-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.step-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.step-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.step-info {
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    padding: 10px 16px;
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    font-weight: 500;
+}
+
+/* ============ PERSONAS SELECTOR ============ */
+.personas-selector {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.persona-btn {
+    padding: 14px;
+    border: 2px solid var(--light-3);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.persona-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* ============ CALENDARIO ============ */
+.calendar {
+    background: white;
+    border: 2px solid var(--light-3);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: var(--light-2);
+}
+
+.calendar-header button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.calendar-header button:hover {
+    background: var(--primary-light);
+}
+
+.calendar-header span {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 8px 16px;
+    text-align: center;
+}
+
+.calendar-weekdays span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray);
+    padding: 8px;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0 16px 16px;
+    gap: 4px;
+}
+
+.calendar-day {
+    padding: 10px;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    border: none;
+    background: none;
+    font-family: inherit;
+}
+
+.calendar-day:hover:not(.disabled):not(.empty) {
+    background: var(--primary-light);
+}
+
+.calendar-day.selected {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.calendar-day.today {
+    border: 2px solid var(--primary);
+    font-weight: 700;
+}
+
+.calendar-day.disabled {
+    color: var(--light-3);
+    cursor: not-allowed;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+/* ============ TIME GRID ============ */
+.time-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.time-btn {
+    padding: 14px;
+    border: 2px solid var(--light-3);
+    border-radius: var(--radius-sm);
+    background: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.time-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.time-btn.unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ============ FORM ============ */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid var(--light-3);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: var(--transition);
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* ============ RESUMEN ============ */
+.reserva-summary {
+    background: var(--light-2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--light-3);
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item i {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.summary-value {
+    display: block;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+/* ============ ÉXITO ============ */
+.success-container {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.success-container h2 {
+    margin-bottom: 8px;
+}
+
+.success-container > p {
+    color: var(--gray);
+    margin-bottom: 24px;
+}
+
+.reserva-code {
+    background: var(--light-2);
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 32px;
+}
+
+.reserva-code span {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 4px;
+}
+
+.reserva-code strong {
+    font-size: 1.5rem;
+    color: var(--primary);
+    letter-spacing: 3px;
+}
+
+.success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ============ BOTONES ============ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), #5A52D5);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(108,99,255,0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-outline {
+    background: white;
+    color: var(--dark);
+    border: 2px solid var(--light-3);
+}
+
+.btn-full { width: 100%; }
+
+.step-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.step-buttons .btn {
+    flex: 1;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 400px) {
+    .personas-selector {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
