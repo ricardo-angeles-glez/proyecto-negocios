@@ -1,13 +1,12 @@
-<!-- landing/index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tu Negocio - Landing Page Profesional</title>
+    <title>La Casona - Cocina Mexicana</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
@@ -15,63 +14,123 @@
     <nav class="navbar" id="navbar">
         <div class="nav-container">
             <a href="#" class="logo">
-                <span class="logo-icon">◆</span>
-                <span class="logo-text">TuNegocio</span>
+                <i class="ph ph-cooking-pot"></i>
+                <span>La Casona</span>
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#nosotros">Nosotros</a></li>
                 <li><a href="#servicios">Servicios</a></li>
-                <li><a href="#menu">Menú</a></li>
-                <li><a href="#reservas">Reservas</a></li>
                 <li><a href="#contacto">Contacto</a></li>
             </ul>
             <div class="nav-actions">
-                <a href="#reservas" class="btn-nav">Reservar Ahora</a>
-                <button class="menu-toggle" id="menuToggle">
-                    <span></span><span></span><span></span>
+                <a href="../menu-digital/" class="btn-nav btn-nav-outline">
+                    <i class="ph ph-fork-knife"></i>
+                    <span>Ver Menú</span>
+                </a>
+                <a href="../reservas/" class="btn-nav btn-nav-primary">
+                    <i class="ph ph-calendar-check"></i>
+                    <span>Reservar</span>
+                </a>
+                <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">
+                    <i class="ph ph-list"></i>
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
+    <!-- HERO -->
     <section class="hero" id="inicio">
-        <div class="hero-bg">
-            <div class="hero-overlay"></div>
-        </div>
         <div class="hero-content">
-            <div class="hero-badge">✨ Bienvenidos a una nueva experiencia</div>
-            <h1 class="hero-title">
-                Transforma tu
-                <span class="gradient-text">experiencia</span>
-                gastronómica
+            <span class="hero-badge">
+                <i class="ph ph-star-four"></i>
+                Cocina tradicional mexicana
+            </span>
+            <h1>
+                Sabores que cuentan
+                <em>historias</em>
             </h1>
             <p class="hero-subtitle">
-                Descubre sabores únicos en un ambiente acogedor.
-                Reserva tu mesa y explora nuestro menú digital.
+                Una experiencia gastronómica que fusiona la tradición colonial
+                con ingredientes frescos de nuestra tierra. Reserva tu mesa y
+                déjate sorprender.
             </p>
             <div class="hero-buttons">
-                <a href="#menu" class="btn btn-primary">
-                    <i class="fas fa-utensils"></i> Ver Menú
+                <a href="../reservas/" class="btn btn-primary">
+                    <i class="ph ph-calendar-check"></i>
+                    Reservar Mesa
                 </a>
-                <a href="#reservas" class="btn btn-secondary">
-                    <i class="fas fa-calendar-check"></i> Reservar Mesa
+                <a href="../menu-digital/" class="btn btn-outline">
+                    <i class="ph ph-fork-knife"></i>
+                    Explorar Menú
                 </a>
             </div>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-number" data-count="500">0</span>+
-                    <span class="stat-label">Clientes felices</span>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-image-container">
+                <img src="https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=600&q=80"
+                     alt="Platillo mexicano" class="hero-image">
+                <div class="hero-image-accent"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats-bar">
+        <div class="container">
+            <div class="stat-item">
+                <span class="stat-number" data-count="500">0</span>
+                <span class="stat-label">Clientes satisfechos</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number" data-count="50">0</span>
+                <span class="stat-label">Platillos en carta</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number" data-count="4">0</span>
+                <span class="stat-label">Años de tradición</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- NOSOTROS -->
+    <section class="nosotros" id="nosotros">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">
+                    <i class="ph ph-heart"></i>
+                    Nuestra historia
+                </span>
+                <h2>Cocina hecha con <em>alma</em></h2>
+                <p>
+                    Nacimos del amor por la cocina mexicana y el deseo de compartir
+                    los sabores que nos acompañaron desde niños. Cada platillo
+                    cuenta una historia de familia, tradición y pasión.
+                </p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-leaf"></i>
+                    </div>
+                    <h3>Ingredientes frescos</h3>
+                    <p>Seleccionamos los mejores ingredientes de productores locales cada mañana</p>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number" data-count="50">0</span>+
-                    <span class="stat-label">Platos únicos</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-fire"></i>
+                    </div>
+                    <h3>Recetas tradicionales</h3>
+                    <p>Nuestras recetas pasan de generación en generación desde hace décadas</p>
                 </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-number" data-count="5">0</span>
-                    <span class="stat-label">⭐ Estrellas</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="ph ph-users-three"></i>
+                    </div>
+                    <h3>Ambiente familiar</h3>
+                    <p>Un espacio cálido donde cada visita se siente como llegar a casa</p>
                 </div>
             </div>
         </div>
@@ -81,82 +140,173 @@
     <section class="servicios" id="servicios">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Nuestros Servicios</span>
-                <h2>Todo lo que <span class="gradient-text">necesitas</span></h2>
-                <p>Ofrecemos una experiencia completa para ti y tu negocio</p>
+                <span class="section-tag">
+                    <i class="ph ph-sparkle"></i>
+                    Lo que ofrecemos
+                </span>
+                <h2>Más que un <em>restaurante</em></h2>
             </div>
-            <div class="servicios-grid">
-                <div class="servicio-card">
-                    <div class="servicio-icon">🌐</div>
-                    <h3>Landing Pages</h3>
-                    <p>Páginas web profesionales que convierten visitantes en clientes</p>
-                    <ul class="servicio-features">
-                        <li>✅ Diseño responsivo</li>
-                        <li>✅ SEO optimizado</li>
-                        <li>✅ Carga ultra rápida</li>
-                    </ul>
-                </div>
-                <div class="servicio-card featured">
-                    <div class="servicio-badge">Popular</div>
-                    <div class="servicio-icon">🍽️</div>
-                    <h3>Menú Digital</h3>
-                    <p>Menú interactivo con QR code para tu restaurante</p>
-                    <ul class="servicio-features">
-                        <li>✅ Código QR incluido</li>
-                        <li>✅ Actualización en tiempo real</li>
-                        <li>✅ Fotos de platillos</li>
-                    </ul>
-                </div>
-                <div class="servicio-card">
-                    <div class="servicio-icon">📅</div>
-                    <h3>Sistema de Reservas</h3>
-                    <p>Gestiona reservas automáticamente sin complicaciones</p>
-                    <ul class="servicio-features">
-                        <li>✅ Confirmación automática</li>
-                        <li>✅ Notificaciones WhatsApp</li>
-                        <li>✅ Panel de administración</li>
-                    </ul>
+            <div class="services-grid">
+                <a href="../menu-digital/" class="service-card">
+                    <div class="service-icon blue">
+                        <i class="ph ph-qr-code"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Menú Digital</h3>
+                        <p>Explora nuestra carta completa desde tu teléfono. Escanea el QR en tu mesa.</p>
+                        <span class="service-link">
+                            Ver menú <i class="ph ph-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+                <a href="../reservas/" class="service-card">
+                    <div class="service-icon olive">
+                        <i class="ph ph-calendar-check"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Reservaciones en línea</h3>
+                        <p>Asegura tu mesa en segundos. Recibe confirmación inmediata por WhatsApp.</p>
+                        <span class="service-link">
+                            Reservar ahora <i class="ph ph-arrow-right"></i>
+                        </span>
+                    </div>
+                </a>
+                <div class="service-card">
+                    <div class="service-icon terra">
+                        <i class="ph ph-package"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Eventos privados</h3>
+                        <p>Celebra cumpleaños, reuniones o eventos corporativos en nuestro salón privado.</p>
+                        <span class="service-link">
+                            Consultar <i class="ph ph-arrow-right"></i>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- CONTACTO / FOOTER -->
+    <!-- CTA -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h2>Tu mesa te espera</h2>
+                    <p>Haz tu reservación hoy y vive una experiencia gastronómica inolvidable</p>
+                    <div class="cta-buttons">
+                        <a href="../reservas/" class="btn btn-primary">
+                            <i class="ph ph-calendar-check"></i>
+                            Reservar Mesa
+                        </a>
+                        <a href="https://wa.me/1234567890" target="_blank" class="btn btn-whatsapp">
+                            <i class="ph ph-whatsapp-logo"></i>
+                            WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACTO -->
     <section class="contacto" id="contacto">
         <div class="container">
             <div class="section-header">
-                <span class="section-badge">Contacto</span>
-                <h2>¿Listo para <span class="gradient-text">empezar</span>?</h2>
+                <span class="section-tag">
+                    <i class="ph ph-map-pin"></i>
+                    Encuéntranos
+                </span>
+                <h2>Ven a <em>visitarnos</em></h2>
             </div>
-            <form class="contact-form" id="contactForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" name="nombre" required placeholder="Tu nombre">
+            <div class="contacto-grid">
+                <div class="contacto-info">
+                    <div class="info-item">
+                        <i class="ph ph-map-pin"></i>
+                        <div>
+                            <strong>Dirección</strong>
+                            <p>Calle Hidalgo 123, Centro Histórico, CDMX</p>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" required placeholder="tu@email.com">
+                    <div class="info-item">
+                        <i class="ph ph-clock"></i>
+                        <div>
+                            <strong>Horario</strong>
+                            <p>Lun - Sáb: 12:00 - 22:00<br>Dom: 12:00 - 18:00</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="ph ph-phone"></i>
+                        <div>
+                            <strong>Teléfono</strong>
+                            <p>+52 55 1234 5678</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="ph ph-envelope-simple"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p>hola@lacasona.com</p>
+                        </div>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Mensaje</label>
-                    <textarea name="mensaje" rows="4" required placeholder="¿En qué podemos ayudarte?"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary btn-full">
-                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
-                </button>
-            </form>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <label for="contact-name">Nombre</label>
+                        <input type="text" id="contact-name" name="nombre" required
+                               placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" name="email" required
+                               placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-message">Mensaje</label>
+                        <textarea id="contact-message" name="mensaje" rows="4" required
+                                  placeholder="Tu mensaje..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">
+                        <i class="ph ph-paper-plane-tilt"></i>
+                        Enviar mensaje
+                    </button>
+                </form>
+            </div>
         </div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 TuNegocio. Todos los derechos reservados.</p>
-            <div class="social-links">
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-facebook"></i></a>
-                <a href="#"><i class="fab fa-whatsapp"></i></a>
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <i class="ph ph-cooking-pot"></i>
+                        <span>La Casona</span>
+                    </a>
+                    <p>Cocina mexicana tradicional en el corazón de la ciudad</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Navegación</h4>
+                    <a href="../menu-digital/">Menú</a>
+                    <a href="../reservas/">Reservar</a>
+                    <a href="#contacto">Contacto</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Síguenos</h4>
+                    <a href="#" aria-label="Instagram">
+                        <i class="ph ph-instagram-logo"></i> Instagram
+                    </a>
+                    <a href="#" aria-label="Facebook">
+                        <i class="ph ph-facebook-logo"></i> Facebook
+                    </a>
+                    <a href="#" aria-label="TikTok">
+                        <i class="ph ph-tiktok-logo"></i> TikTok
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>2024 La Casona. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

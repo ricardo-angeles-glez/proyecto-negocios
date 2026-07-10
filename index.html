@@ -3,98 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto Negocios</title>
+    <title>Sistema de Negocios - Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        :root {
+            --cream: #FDF6EC;
+            --cream-dark: #F5ECD7;
+            --sand: #E8D5B7;
+            --rose: #D4738C;
+            --rose-light: #F2D0D9;
+            --blue: #4A6FA5;
+            --blue-light: #C5D5EA;
+            --terra: #C1694F;
+            --olive: #6B8F71;
+            --text-dark: #2C1810;
+            --text-mid: #5C4033;
+            --text-soft: #8B7355;
+            --white: #FFFFFF;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: #1a1a2e;
-            color: white;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--text-dark);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
         }
-        .container { text-align: center; max-width: 900px; width: 100%; }
-        .logo { font-size: 3rem; margin-bottom: 16px; }
-        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
-        .subtitle { color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+
+        .portal {
+            max-width: 960px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .portal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            background: var(--rose-light);
+            color: var(--rose);
+            border-radius: 50px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .portal h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 400;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .portal-subtitle {
+            color: var(--text-soft);
+            font-size: 1.05rem;
+            margin-bottom: 48px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 16px;
+            margin-bottom: 48px;
         }
+
         .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 20px;
+            background: var(--white);
+            border: 1px solid var(--sand);
+            border-radius: 16px;
             padding: 32px 24px;
             text-decoration: none;
-            color: white;
-            transition: all 0.3s;
-            display: block;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
         }
+
         .card:hover {
-            background: rgba(108,99,255,0.15);
-            border-color: rgba(108,99,255,0.5);
-            transform: translateY(-6px);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(44, 24, 16, 0.08);
+            border-color: var(--rose);
         }
-        .card-icon { font-size: 2.5rem; margin-bottom: 16px; }
-        .card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
-        .card p { font-size: 0.82rem; color: rgba(255,255,255,0.5); line-height: 1.5; }
-        .badge {
-            display: inline-block;
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+
+        .card-icon.rose { background: var(--rose-light); color: var(--rose); }
+        .card-icon.blue { background: var(--blue-light); color: var(--blue); }
+        .card-icon.olive { background: rgba(107,143,113,0.15); color: var(--olive); }
+        .card-icon.terra { background: rgba(193,105,79,0.12); color: var(--terra); }
+
+        .card h2 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .card p {
+            font-size: 0.82rem;
+            color: var(--text-soft);
+            line-height: 1.5;
+        }
+
+        .card .tag {
             padding: 3px 10px;
-            background: rgba(108,99,255,0.3);
+            background: var(--cream);
             border-radius: 50px;
             font-size: 0.7rem;
-            color: #a5a0ff;
-            margin-top: 12px;
+            color: var(--text-soft);
             font-weight: 600;
         }
-        .version {
-            margin-top: 48px;
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.2);
+
+        .portal-footer {
+            font-size: 0.78rem;
+            color: var(--text-soft);
+        }
+
+        .portal-footer a {
+            color: var(--rose);
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">◆</div>
-        <h1>Proyecto Negocios</h1>
-        <p class="subtitle">Sistema completo: Landing Pages · Menús Digitales · Reservas</p>
+    <div class="portal">
+        <div class="portal-badge">
+            <i class="ph ph-stack"></i>
+            Portal de Administración
+        </div>
+
+        <h1>Sistema de Negocios Digitales</h1>
+        <p class="portal-subtitle">
+            Gestiona landing pages, menús digitales y reservas para tus clientes.
+            Selecciona un módulo para comenzar.
+        </p>
 
         <div class="grid">
             <a href="./src/landing/" class="card">
-                <div class="card-icon">🌐</div>
+                <div class="card-icon rose">
+                    <i class="ph ph-browser"></i>
+                </div>
                 <h2>Landing Page</h2>
-                <p>Página de presentación profesional para tu negocio</p>
-                <span class="badge">HTML + CSS</span>
+                <p>Página de presentación del negocio para clientes finales</p>
+                <span class="tag">Vista del cliente</span>
             </a>
+
             <a href="./src/menu-digital/" class="card">
-                <div class="card-icon">🍽️</div>
+                <div class="card-icon blue">
+                    <i class="ph ph-fork-knife"></i>
+                </div>
                 <h2>Menú Digital</h2>
-                <p>Menú interactivo con código QR integrado</p>
-                <span class="badge">+ Supabase</span>
+                <p>Menú interactivo con código QR para restaurantes</p>
+                <span class="tag">Con QR</span>
             </a>
+
             <a href="./src/reservas/" class="card">
-                <div class="card-icon">📅</div>
-                <h2>Reservas</h2>
-                <p>Sistema completo de reservas con notificaciones</p>
-                <span class="badge">+ Supabase</span>
+                <div class="card-icon olive">
+                    <i class="ph ph-calendar-check"></i>
+                </div>
+                <h2>Reservaciones</h2>
+                <p>Sistema paso a paso para reservar mesas</p>
+                <span class="tag">WhatsApp</span>
             </a>
+
             <a href="./src/admin/dashboard.html" class="card">
-                <div class="card-icon">⚙️</div>
-                <h2>Admin Panel</h2>
-                <p>Panel de control para gestionar todo el sistema</p>
-                <span class="badge">Dashboard</span>
+                <div class="card-icon terra">
+                    <i class="ph ph-chart-bar"></i>
+                </div>
+                <h2>Panel Admin</h2>
+                <p>Dashboard para gestionar todo el sistema</p>
+                <span class="tag">Dashboard</span>
             </a>
         </div>
 
-        <p class="version">v1.0.0 · Powered by Vercel + Supabase</p>
+        <p class="portal-footer">
+            v1.0.0 · Creado por <a href="https://rangeles.com" target="_blank">Ricardo Angeles</a>
+        </p>
     </div>
 </body>
 </html>

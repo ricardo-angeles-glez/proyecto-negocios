@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservas - Tu Restaurante</title>
+    <title>Reservar Mesa - La Casona</title>
     <link rel="stylesheet" href="reservas.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
 <div class="reservas-app">
@@ -14,11 +14,11 @@
     <!-- HEADER -->
     <header class="reservas-header">
         <a href="../landing/" class="back-btn">
-            <i class="fas fa-arrow-left"></i>
+            <i class="ph ph-arrow-left"></i>
         </a>
         <div class="header-content">
-            <h1>📅 Reservar Mesa</h1>
-            <p>Selecciona fecha, hora y número de personas</p>
+            <h1>Reservar Mesa</h1>
+            <p>Selecciona fecha, hora y personas</p>
         </div>
     </header>
 
@@ -45,16 +45,14 @@
         </div>
     </div>
 
-    <!-- CONTENIDO -->
     <main class="reservas-content">
 
-        <!-- ═══ PASO 1: FECHA Y PERSONAS ═══ -->
+        <!-- PASO 1 -->
         <div class="step-content active" id="step1">
-            <h2>¿Cuándo quieres venir?</h2>
+            <h2>Fecha y personas</h2>
 
-            <!-- Personas -->
             <div class="form-group">
-                <label><i class="fas fa-users"></i> Número de personas</label>
+                <label><i class="ph ph-users"></i> Personas</label>
                 <div class="personas-selector">
                     <button class="persona-btn" type="button" data-personas="1">1</button>
                     <button class="persona-btn active" type="button" data-personas="2">2</button>
@@ -65,44 +63,34 @@
                 </div>
             </div>
 
-            <!-- Calendario -->
             <div class="form-group">
-                <label><i class="fas fa-calendar"></i> Selecciona una fecha</label>
+                <label><i class="ph ph-calendar"></i> Fecha</label>
                 <div class="calendar" id="calendar">
                     <div class="calendar-header">
-                        <button type="button" id="prevMonth">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
+                        <button type="button" id="prevMonth"><i class="ph ph-caret-left"></i></button>
                         <span id="currentMonth"></span>
-                        <button type="button" id="nextMonth">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
+                        <button type="button" id="nextMonth"><i class="ph ph-caret-right"></i></button>
                     </div>
                     <div class="calendar-weekdays">
-                        <span>Do</span>
-                        <span>Lu</span>
-                        <span>Ma</span>
-                        <span>Mi</span>
-                        <span>Ju</span>
-                        <span>Vi</span>
-                        <span>Sa</span>
+                        <span>Do</span><span>Lu</span><span>Ma</span>
+                        <span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span>
                     </div>
                     <div class="calendar-days" id="calendarDays"></div>
                 </div>
             </div>
 
             <button class="btn btn-primary btn-full" id="toStep2" type="button" disabled>
-                Continuar <i class="fas fa-arrow-right"></i>
+                Continuar <i class="ph ph-arrow-right"></i>
             </button>
         </div>
 
-        <!-- ═══ PASO 2: HORA ═══ -->
+        <!-- PASO 2 -->
         <div class="step-content" id="step2">
-            <h2>¿A qué hora?</h2>
-            <p class="step-info" id="selectedDateInfo">Cargando...</p>
+            <h2>Selecciona horario</h2>
+            <p class="step-info" id="selectedDateInfo"></p>
 
             <div class="form-group">
-                <label><i class="fas fa-sun"></i> Almuerzo</label>
+                <label><i class="ph ph-sun"></i> Almuerzo</label>
                 <div class="time-grid">
                     <button class="time-btn" type="button" data-time="12:00">12:00</button>
                     <button class="time-btn" type="button" data-time="12:30">12:30</button>
@@ -114,7 +102,7 @@
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-moon"></i> Cena</label>
+                <label><i class="ph ph-moon"></i> Cena</label>
                 <div class="time-grid">
                     <button class="time-btn" type="button" data-time="19:00">19:00</button>
                     <button class="time-btn" type="button" data-time="19:30">19:30</button>
@@ -127,40 +115,34 @@
 
             <div class="step-buttons">
                 <button class="btn btn-outline" type="button" id="backToStep1">
-                    <i class="fas fa-arrow-left"></i> Atrás
+                    <i class="ph ph-arrow-left"></i> Atrás
                 </button>
                 <button class="btn btn-primary" type="button" id="toStep3" disabled>
-                    Continuar <i class="fas fa-arrow-right"></i>
+                    Continuar <i class="ph ph-arrow-right"></i>
                 </button>
             </div>
         </div>
 
-        <!-- ═══ PASO 3: DATOS PERSONALES ═══ -->
+        <!-- PASO 3 -->
         <div class="step-content" id="step3">
             <h2>Tus datos</h2>
-            <p class="step-info" id="selectedTimeInfo">Cargando...</p>
+            <p class="step-info" id="selectedTimeInfo"></p>
 
             <form id="reservaForm" onsubmit="return false">
                 <div class="form-group">
-                    <label for="nombre">Nombre completo *</label>
-                    <input type="text" id="nombre" required
-                           placeholder="Tu nombre completo"
-                           autocomplete="name">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" required placeholder="Tu nombre completo">
                 </div>
                 <div class="form-group">
-                    <label for="telefono">Teléfono *</label>
-                    <input type="tel" id="telefono" required
-                           placeholder="+52 123 456 7890"
-                           autocomplete="tel">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" required placeholder="+52 55 1234 5678">
                 </div>
                 <div class="form-group">
-                    <label for="email">Email <span style="color:#6c757d;font-weight:400">(opcional)</span></label>
-                    <input type="email" id="email"
-                           placeholder="tu@email.com"
-                           autocomplete="email">
+                    <label for="email">Email (opcional)</label>
+                    <input type="email" id="email" placeholder="tu@email.com">
                 </div>
                 <div class="form-group">
-                    <label for="notas">Notas especiales <span style="color:#6c757d;font-weight:400">(opcional)</span></label>
+                    <label for="notas">Notas (opcional)</label>
                     <textarea id="notas" rows="3"
                         placeholder="Alergias, celebraciones, preferencia de mesa..."></textarea>
                 </div>
@@ -168,56 +150,56 @@
 
             <div class="step-buttons">
                 <button class="btn btn-outline" type="button" id="backToStep2">
-                    <i class="fas fa-arrow-left"></i> Atrás
+                    <i class="ph ph-arrow-left"></i> Atrás
                 </button>
                 <button class="btn btn-primary" type="button" id="toStep4">
-                    Revisar <i class="fas fa-arrow-right"></i>
+                    Revisar <i class="ph ph-arrow-right"></i>
                 </button>
             </div>
         </div>
 
-        <!-- ═══ PASO 4: CONFIRMACIÓN ═══ -->
+        <!-- PASO 4 -->
         <div class="step-content" id="step4">
             <h2>Confirma tu reserva</h2>
 
             <div class="reserva-summary">
                 <div class="summary-item">
-                    <i class="fas fa-calendar"></i>
+                    <i class="ph ph-calendar"></i>
                     <div>
                         <span class="summary-label">Fecha</span>
                         <span class="summary-value" id="summaryDate">-</span>
                     </div>
                 </div>
                 <div class="summary-item">
-                    <i class="fas fa-clock"></i>
+                    <i class="ph ph-clock"></i>
                     <div>
                         <span class="summary-label">Hora</span>
                         <span class="summary-value" id="summaryTime">-</span>
                     </div>
                 </div>
                 <div class="summary-item">
-                    <i class="fas fa-users"></i>
+                    <i class="ph ph-users"></i>
                     <div>
                         <span class="summary-label">Personas</span>
                         <span class="summary-value" id="summaryPersonas">-</span>
                     </div>
                 </div>
                 <div class="summary-item">
-                    <i class="fas fa-user"></i>
+                    <i class="ph ph-user"></i>
                     <div>
                         <span class="summary-label">Nombre</span>
                         <span class="summary-value" id="summaryNombre">-</span>
                     </div>
                 </div>
                 <div class="summary-item">
-                    <i class="fas fa-phone"></i>
+                    <i class="ph ph-phone"></i>
                     <div>
                         <span class="summary-label">Teléfono</span>
                         <span class="summary-value" id="summaryTelefono">-</span>
                     </div>
                 </div>
                 <div class="summary-item" id="summaryNotasContainer" style="display:none">
-                    <i class="fas fa-sticky-note"></i>
+                    <i class="ph ph-note"></i>
                     <div>
                         <span class="summary-label">Notas</span>
                         <span class="summary-value" id="summaryNotas">-</span>
@@ -227,21 +209,22 @@
 
             <div class="step-buttons">
                 <button class="btn btn-outline" type="button" id="backToStep3">
-                    <i class="fas fa-arrow-left"></i> Atrás
+                    <i class="ph ph-arrow-left"></i> Atrás
                 </button>
                 <button class="btn btn-primary" type="button" id="confirmReserva">
-                    <i class="fas fa-check"></i> Confirmar Reserva
+                    <i class="ph ph-check"></i> Confirmar
                 </button>
             </div>
         </div>
 
-        <!-- ═══ PASO 5: ÉXITO ═══ -->
-        <!-- ⚠️ Este paso es el que faltaba -->
+        <!-- PASO 5: ÉXITO -->
         <div class="step-content" id="step5">
             <div class="success-container">
-                <div class="success-icon">✅</div>
-                <h2>¡Reserva Confirmada!</h2>
-                <p>Te abriremos WhatsApp para enviarte los detalles</p>
+                <div class="success-icon">
+                    <i class="ph ph-check-fat"></i>
+                </div>
+                <h2>Reserva confirmada</h2>
+                <p>Recibirás los detalles por WhatsApp</p>
 
                 <div class="reserva-code">
                     <span>Tu código de reserva</span>
@@ -249,22 +232,16 @@
                 </div>
 
                 <div class="success-actions">
-                    <a href="#"
-                       class="btn btn-primary btn-full"
-                       id="addToCalendar"
-                       target="_blank">
-                        <i class="fas fa-calendar-plus"></i>
+                    <a href="#" class="btn btn-primary btn-full" id="addToCalendar" target="_blank">
+                        <i class="ph ph-calendar-plus"></i>
                         Agregar al Calendario
                     </a>
-                    <button class="btn btn-outline btn-full"
-                            type="button"
-                            id="newReserva">
-                        <i class="fas fa-plus"></i>
-                        Hacer Otra Reserva
+                    <button class="btn btn-outline btn-full" type="button" id="newReserva">
+                        <i class="ph ph-plus"></i>
+                        Nueva Reserva
                     </button>
-                    <a href="../landing/"
-                       class="btn btn-outline btn-full">
-                        <i class="fas fa-home"></i>
+                    <a href="../landing/" class="btn btn-outline btn-full">
+                        <i class="ph ph-house"></i>
                         Volver al Inicio
                     </a>
                 </div>
@@ -274,7 +251,6 @@
     </main>
 </div>
 
-<!-- SIN type="module" para evitar problemas de CORS en local -->
 <script src="reservas.js"></script>
 </body>
 </html>

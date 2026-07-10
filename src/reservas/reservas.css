@@ -1,41 +1,53 @@
-/* reservas/reservas.css */
+/* ============================================
+   RESERVAS - ESTILO COLONIAL
+   ============================================ */
 
 :root {
-    --primary: #6C63FF;
-    --primary-light: rgba(108,99,255,0.1);
-    --secondary: #FF6B6B;
-    --accent: #00D4AA;
-    --dark: #1a1a2e;
-    --light: #ffffff;
-    --light-2: #f8f9fa;
-    --light-3: #e9ecef;
-    --gray: #6c757d;
-    --shadow: 0 4px 15px rgba(0,0,0,0.08);
-    --radius: 16px;
-    --radius-sm: 10px;
-    --transition: all 0.3s ease;
+    --cream:        #FDF6EC;
+    --cream-dark:   #F5ECD7;
+    --sand:         #E8D5B7;
+    --rose:         #D4738C;
+    --rose-dark:    #B85D76;
+    --rose-light:   #F2D0D9;
+    --rose-pale:    #FBE8ED;
+    --blue:         #4A6FA5;
+    --blue-light:   #C5D5EA;
+    --blue-pale:    #E8EFF7;
+    --terra:        #C1694F;
+    --terra-light:  #F0D5CB;
+    --olive:        #6B8F71;
+    --olive-light:  #D5E5D8;
+    --text:         #2C1810;
+    --text-mid:     #5C4033;
+    --text-soft:    #8B7355;
+    --white:        #FFFFFF;
+    --shadow-sm:    0 2px 8px rgba(44,24,16,0.06);
+    --shadow-md:    0 8px 24px rgba(44,24,16,0.08);
+    --radius:       16px;
+    --radius-sm:    10px;
+    --transition:   all 0.3s ease;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background: var(--light-2);
-    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
 }
 
 .reservas-app {
     max-width: 520px;
     margin: 0 auto;
     min-height: 100vh;
-    background: var(--light);
+    background: var(--cream);
 }
 
-/* ============ HEADER ============ */
+/* ── Header ───────────────────────────────── */
 .reservas-header {
-    background: linear-gradient(135deg, var(--dark), #2a2a4a);
+    background: var(--text);
     padding: 20px;
-    color: white;
+    color: var(--white);
     display: flex;
     align-items: center;
     gap: 16px;
@@ -49,28 +61,31 @@ body {
     justify-content: center;
     border-radius: 50%;
     background: rgba(255,255,255,0.1);
-    color: white;
+    color: var(--white);
     text-decoration: none;
+    font-size: 1.2rem;
     transition: var(--transition);
 }
 
+.back-btn:hover { background: rgba(255,255,255,0.2); }
+
 .header-content h1 {
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
 }
 
 .header-content p {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.6);
+    font-size: 0.82rem;
+    color: var(--sand);
 }
 
-/* ============ STEPPER ============ */
+/* ── Stepper ──────────────────────────────── */
 .stepper {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px 20px;
-    gap: 0;
 }
 
 .step {
@@ -84,86 +99,71 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--light-3);
+    background: var(--sand);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--gray);
+    font-size: 0.82rem;
+    color: var(--text-soft);
     transition: var(--transition);
 }
 
-.step.active .step-number {
-    background: var(--primary);
-    color: white;
-}
-
-.step.completed .step-number {
-    background: var(--accent);
-    color: white;
-}
+.step.active .step-number { background: var(--rose); color: var(--white); }
+.step.completed .step-number { background: var(--olive); color: var(--white); }
 
 .step-label {
-    font-size: 0.7rem;
-    color: var(--gray);
+    font-size: 0.68rem;
+    color: var(--text-soft);
     font-weight: 600;
 }
 
-.step.active .step-label {
-    color: var(--primary);
-}
+.step.active .step-label { color: var(--rose); }
 
 .step-line {
     width: 40px;
     height: 2px;
-    background: var(--light-3);
+    background: var(--sand);
     margin: 0 8px;
     margin-bottom: 18px;
     transition: var(--transition);
 }
 
-.step-line.active {
-    background: var(--primary);
-}
+.step-line.active { background: var(--rose); }
 
-/* ============ CONTENIDO ============ */
-.reservas-content {
-    padding: 0 20px 40px;
-}
+/* ── Content ──────────────────────────────── */
+.reservas-content { padding: 0 20px 40px; }
 
 .step-content {
     display: none;
     animation: fadeIn 0.3s ease;
 }
 
-.step-content.active {
-    display: block;
-}
+.step-content.active { display: block; }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
 }
 
 .step-content h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
     margin-bottom: 8px;
 }
 
 .step-info {
-    color: var(--gray);
-    font-size: 0.9rem;
+    color: var(--rose);
+    font-size: 0.85rem;
     margin-bottom: 24px;
     padding: 10px 16px;
-    background: var(--primary-light);
+    background: var(--rose-pale);
     border-radius: var(--radius-sm);
-    color: var(--primary);
     font-weight: 500;
 }
 
-/* ============ PERSONAS SELECTOR ============ */
+/* ── Personas ─────────────────────────────── */
 .personas-selector {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -172,26 +172,27 @@ body {
 
 .persona-btn {
     padding: 14px;
-    border: 2px solid var(--light-3);
+    border: 1.5px solid var(--sand);
     border-radius: var(--radius-sm);
-    background: white;
+    background: var(--white);
     font-family: inherit;
     font-size: 1rem;
     font-weight: 700;
+    color: var(--text);
     cursor: pointer;
     transition: var(--transition);
 }
 
 .persona-btn.active {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    color: var(--primary);
+    border-color: var(--rose);
+    background: var(--rose-pale);
+    color: var(--rose);
 }
 
-/* ============ CALENDARIO ============ */
+/* ── Calendar ─────────────────────────────── */
 .calendar {
-    background: white;
-    border: 2px solid var(--light-3);
+    background: var(--white);
+    border: 1.5px solid var(--sand);
     border-radius: var(--radius);
     overflow: hidden;
 }
@@ -200,8 +201,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    background: var(--light-2);
+    padding: 14px 16px;
+    background: var(--cream-dark);
 }
 
 .calendar-header button {
@@ -209,21 +210,21 @@ body {
     height: 36px;
     border: none;
     border-radius: 50%;
-    background: white;
+    background: var(--white);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: var(--transition);
+    font-size: 0.9rem;
+    color: var(--text-mid);
 }
 
-.calendar-header button:hover {
-    background: var(--primary-light);
-}
+.calendar-header button:hover { background: var(--rose-pale); color: var(--rose); }
 
 .calendar-header span {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
 .calendar-weekdays {
@@ -234,9 +235,9 @@ body {
 }
 
 .calendar-weekdays span {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: var(--gray);
+    color: var(--text-soft);
     padding: 8px;
 }
 
@@ -253,37 +254,21 @@ body {
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     transition: var(--transition);
     border: none;
     background: none;
     font-family: inherit;
+    color: var(--text);
 }
 
-.calendar-day:hover:not(.disabled):not(.empty) {
-    background: var(--primary-light);
-}
+.calendar-day:hover:not(.disabled):not(.empty) { background: var(--rose-pale); }
+.calendar-day.selected { background: var(--rose) !important; color: var(--white) !important; }
+.calendar-day.today { border: 2px solid var(--rose); font-weight: 700; }
+.calendar-day.disabled { color: var(--sand); cursor: not-allowed; }
+.calendar-day.empty { cursor: default; }
 
-.calendar-day.selected {
-    background: var(--primary) !important;
-    color: white !important;
-}
-
-.calendar-day.today {
-    border: 2px solid var(--primary);
-    font-weight: 700;
-}
-
-.calendar-day.disabled {
-    color: var(--light-3);
-    cursor: not-allowed;
-}
-
-.calendar-day.empty {
-    cursor: default;
-}
-
-/* ============ TIME GRID ============ */
+/* ── Time Grid ────────────────────────────── */
 .time-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -292,20 +277,21 @@ body {
 
 .time-btn {
     padding: 14px;
-    border: 2px solid var(--light-3);
+    border: 1.5px solid var(--sand);
     border-radius: var(--radius-sm);
-    background: white;
+    background: var(--white);
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 600;
+    color: var(--text);
     cursor: pointer;
     transition: var(--transition);
 }
 
 .time-btn.active {
-    border-color: var(--primary);
-    background: var(--primary-light);
-    color: var(--primary);
+    border-color: var(--rose);
+    background: var(--rose-pale);
+    color: var(--rose);
 }
 
 .time-btn.unavailable {
@@ -314,7 +300,7 @@ body {
     text-decoration: line-through;
 }
 
-/* ============ FORM ============ */
+/* ── Forms ─────────────────────────────────── */
 .form-group {
     margin-bottom: 20px;
 }
@@ -322,33 +308,42 @@ body {
 .form-group label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
+    gap: 6px;
+    margin-bottom: 8px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    color: var(--text-mid);
 }
 
 .form-group input,
 .form-group textarea {
     width: 100%;
-    padding: 14px 18px;
-    border: 2px solid var(--light-3);
+    padding: 12px 16px;
+    border: 1.5px solid var(--sand);
     border-radius: var(--radius-sm);
     font-family: inherit;
-    font-size: 1rem;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--white);
     transition: var(--transition);
     outline: none;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 4px var(--primary-light);
+    border-color: var(--rose);
+    box-shadow: 0 0 0 3px var(--rose-pale);
 }
 
-/* ============ RESUMEN ============ */
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: var(--text-soft);
+}
+
+/* ── Summary ──────────────────────────────── */
 .reserva-summary {
-    background: var(--light-2);
+    background: var(--white);
+    border: 1.5px solid var(--sand);
     border-radius: var(--radius);
     padding: 24px;
     margin: 24px 0;
@@ -359,137 +354,133 @@ body {
     align-items: center;
     gap: 16px;
     padding: 12px 0;
-    border-bottom: 1px solid var(--light-3);
+    border-bottom: 1px solid var(--cream-dark);
 }
 
-.summary-item:last-child {
-    border-bottom: none;
-}
+.summary-item:last-child { border-bottom: none; }
 
 .summary-item i {
     width: 40px;
     height: 40px;
-    background: var(--primary-light);
-    color: var(--primary);
+    background: var(--rose-pale);
+    color: var(--rose);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    font-size: 1.1rem;
 }
 
 .summary-label {
     display: block;
-    font-size: 0.8rem;
-    color: var(--gray);
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .summary-value {
     display: block;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
 }
 
-/* ============ ÉXITO ============ */
+/* ── Success ──────────────────────────────── */
 .success-container {
     text-align: center;
     padding: 40px 0;
 }
 
 .success-icon {
-    font-size: 4rem;
-    margin-bottom: 16px;
+    width: 72px;
+    height: 72px;
+    background: var(--olive-light);
+    color: var(--olive);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 20px;
+    animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+    0%   { transform: scale(0); }
+    60%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
 }
 
 .success-container h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
     margin-bottom: 8px;
 }
 
 .success-container > p {
-    color: var(--gray);
-    margin-bottom: 24px;
+    color: var(--text-soft);
+    margin-bottom: 28px;
 }
 
 .reserva-code {
-    background: var(--light-2);
-    padding: 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 32px;
+    background: var(--white);
+    border: 2px dashed var(--rose);
+    padding: 20px;
+    border-radius: var(--radius);
+    margin-bottom: 28px;
 }
 
 .reserva-code span {
     display: block;
-    font-size: 0.85rem;
-    color: var(--gray);
-    margin-bottom: 4px;
+    font-size: 0.78rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
 }
 
 .reserva-code strong {
-    font-size: 1.5rem;
-    color: var(--primary);
-    letter-spacing: 3px;
+    font-size: 1.8rem;
+    color: var(--rose);
+    letter-spacing: 4px;
+    font-weight: 800;
 }
 
 .success-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
-/* ============ BOTONES ============ */
+/* ── Buttons ──────────────────────────────── */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 16px 32px;
+    padding: 14px 28px;
     border-radius: 50px;
-    font-weight: 600;
-    font-size: 1rem;
-    text-decoration: none;
-    cursor: pointer;
-    border: none;
     font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
     transition: var(--transition);
+    text-decoration: none;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, var(--primary), #5A52D5);
-    color: white;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(108,99,255,0.3);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-outline {
-    background: white;
-    color: var(--dark);
-    border: 2px solid var(--light-3);
-}
-
+.btn-primary { background: var(--rose); color: var(--white); }
+.btn-primary:hover { background: var(--rose-dark); transform: translateY(-2px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-outline { background: var(--white); color: var(--text); border: 1.5px solid var(--sand); }
+.btn-outline:hover { border-color: var(--rose); color: var(--rose); }
 .btn-full { width: 100%; }
 
-.step-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 32px;
-}
+.step-buttons { display: flex; gap: 12px; margin-top: 28px; }
+.step-buttons .btn { flex: 1; }
 
-.step-buttons .btn {
-    flex: 1;
-}
-
-/* ============ RESPONSIVE ============ */
+/* ── Responsive ───────────────────────────── */
 @media (max-width: 400px) {
-    .personas-selector {
-        grid-template-columns: repeat(3, 1fr);
-    }
+    .personas-selector { grid-template-columns: repeat(3, 1fr); }
 }

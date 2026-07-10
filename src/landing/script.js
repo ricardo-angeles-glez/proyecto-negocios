@@ -1,66 +1,68 @@
-// landing/script.js
+// ============================================
+// LANDING PAGE - SCRIPT
+// ============================================
 
-// ============ NAVBAR SCROLL ============
+// ── Navbar scroll ──────────────────────────
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
 });
 
-// ============ MOBILE MENU ============
+// ── Mobile menu ────────────────────────────
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
 
-menuToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('active');
-});
-
-// Cerrar menú al hacer click en un link
-document.querySelectorAll('.nav-links a').forEach(link => {
-    link.addEventListener('click', () => {
-        navLinks.classList.remove('active');
+if (menuToggle && navLinks) {
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+        const isOpen = navLinks.classList.contains('active');
+        menuToggle.innerHTML = isOpen
+            ? '<i class="ph ph-x"></i>'
+            : '<i class="ph ph-list"></i>';
     });
-});
 
-// ============ CONTADOR ANIMADO ============
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+            menuToggle.innerHTML = '<i class="ph ph-list"></i>';
+        });
+    });
+}
+
+// ── Animated counters ──────────────────────
 function animateCounters() {
-    const counters = document.querySelectorAll('[data-count]');
-    counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-count'));
-        const duration = 2000;
+    document.querySelectorAll('[data-count]').forEach(counter => {
+        const target = parseInt(counter.dataset.count);
+        const duration = 1500;
         const step = target / (duration / 16);
         let current = 0;
 
-        const updateCounter = () => {
+        const update = () => {
             current += step;
             if (current < target) {
                 counter.textContent = Math.floor(current);
-                requestAnimationFrame(updateCounter);
+                requestAnimationFrame(update);
             } else {
                 counter.textContent = target;
             }
         };
-        updateCounter();
+        update();
     });
 }
 
-// Observer para activar contadores cuando son visibles
-const observer = new IntersectionObserver((entries) => {
+const statsObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             animateCounters();
-            observer.unobserve(entry.target);
+            statsObserver.unobserve(entry.target);
         }
     });
 }, { threshold: 0.5 });
 
-const heroStats = document.querySelector('.hero-stats');
-if (heroStats) observer.observe(heroStats);
+const statsBar = document.querySelector('.stats-bar');
+if (statsBar) statsObserver.observe(statsBar);
 
-// ============ SCROLL ANIMATIONS ============
+// ── Scroll animations ──────────────────────
 const scrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -69,42 +71,37 @@ const scrollObserver = new IntersectionObserver((entries) => {
     });
 }, { threshold: 0.1 });
 
-document.querySelectorAll('.servicio-card, .section-header, .contact-form')
-    .forEach(el => scrollObserver.observe(el));
+document.querySelectorAll(
+    '.feature-card, .service-card, .section-header, .cta-card'
+).forEach(el => scrollObserver.observe(el));
 
-// ============ FORMULARIO DE CONTACTO ============
-document.getElementById('contactForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// ── Contact form ───────────────────────────
+const contactForm = document.getElementById('contactForm');
+if (contactForm) {
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
 
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData);
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
 
-    // Opción 1: Enviar a WhatsApp
-    const mensaje = `Hola! Soy ${data.nombre}. ${data.mensaje}. Mi email: ${data.email}`;
-    const whatsappURL = `https://wa.me/TUNUMERO?text=${encodeURIComponent(mensaje)}`;
+        const mensaje = `Hola, soy ${data.nombre}. ${data.mensaje}. Mi email: ${data.email}`;
+        const whatsappURL = `https://wa.me/1234567890?text=${encodeURIComponent(mensaje)}`;
 
-    // Opción 2: Usar Formspree (gratuito)
-    // const response = await fetch('https://formspree.io/f/TU_FORM_ID', {
-    //     method: 'POST',
-    //     body: formData,
-    //     headers: { 'Accept': 'application/json' }
-    // });
+        window.open(whatsappURL, '_blank');
 
-    window.open(whatsappURL, '_blank');
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="ph ph-check"></i> Enviado';
+        btn.style.background = 'var(--olive)';
 
-    // Feedback visual
-    const btn = e.target.querySelector('button[type="submit"]');
-    btn.innerHTML = '<i class="fas fa-check"></i> ¡Enviado!';
-    btn.style.background = 'var(--accent)';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Enviar mensaje';
+            btn.style.background = '';
+            e.target.reset();
+        }, 3000);
+    });
+}
 
-    setTimeout(() => {
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Mensaje';
-        btn.style.background = '';
-        e.target.reset();
-    }, 3000);
-});
-
-// ============ SMOOTH SCROLL ============
+// ── Smooth scroll ──────────────────────────
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
         e.preventDefault();

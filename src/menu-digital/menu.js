@@ -1,328 +1,320 @@
 // ============================================
-// MENU.JS ACTUALIZADO CON SUPABASE/SHEETS
+// MENÚ DIGITAL - SIN IMPORTS (compatibilidad)
 // ============================================
 
-import { db } from '../shared/database.js';
-import config from '../shared/config.js';
+// ── Datos del menú ───────────────────────────
+const menuData = {
+    restaurante: {
+        nombre: 'La Casona',
+        descripcion: 'Cocina mexicana tradicional',
+        moneda: '$',
+        whatsapp: '1234567890'
+    },
+    categorias: [
+        {
+            id: 'entradas',
+            nombre: 'Entradas',
+            items: [
+                {
+                    id: 1,
+                    nombre: 'Sopa de tortilla',
+                    descripcion: 'Caldo de jitomate con tortilla crujiente, aguacate, crema y queso fresco',
+                    precio: 95,
+                    imagen: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400',
+                    etiquetas: ['popular'],
+                    disponible: true
+                },
+                {
+                    id: 2,
+                    nombre: 'Guacamole de la casa',
+                    descripcion: 'Aguacate fresco con cebolla, cilantro, chile serrano y limón. Servido con totopos',
+                    precio: 120,
+                    imagen: 'https://images.unsplash.com/photo-1600335895229-6e75511892c8?w=400',
+                    etiquetas: ['vegetariano', 'popular'],
+                    disponible: true
+                },
+                {
+                    id: 3,
+                    nombre: 'Quesadillas de flor de calabaza',
+                    descripcion: 'Tortillas de maíz hechas a mano con queso Oaxaca y flor de calabaza',
+                    precio: 110,
+                    imagen: 'https://images.unsplash.com/photo-1618040996337-56904b7850b9?w=400',
+                    etiquetas: ['vegetariano'],
+                    disponible: true
+                }
+            ]
+        },
+        {
+            id: 'principales',
+            nombre: 'Platos principales',
+            items: [
+                {
+                    id: 4,
+                    nombre: 'Mole poblano',
+                    descripcion: 'Pollo bañado en mole de 28 ingredientes, acompañado de arroz rojo y tortillas',
+                    precio: 195,
+                    imagen: 'https://images.unsplash.com/photo-1534352956036-cd81e27dd615?w=400',
+                    etiquetas: ['chef recomienda', 'popular'],
+                    disponible: true
+                },
+                {
+                    id: 5,
+                    nombre: 'Tacos de arrachera',
+                    descripcion: 'Tres tacos de arrachera a la parrilla con guacamole, cebolla asada y salsa verde',
+                    precio: 175,
+                    imagen: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400',
+                    etiquetas: ['popular'],
+                    disponible: true
+                },
+                {
+                    id: 6,
+                    nombre: 'Enchiladas suizas',
+                    descripcion: 'Tortillas rellenas de pollo con salsa verde cremosa, gratinadas con queso',
+                    precio: 165,
+                    imagen: 'https://images.unsplash.com/photo-1534352956036-cd81e27dd615?w=400',
+                    etiquetas: [],
+                    disponible: true
+                },
+                {
+                    id: 7,
+                    nombre: 'Chile en nogada',
+                    descripcion: 'Chile poblano relleno de picadillo, bañado en nogada y granada (temporada)',
+                    precio: 225,
+                    imagen: 'https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=400',
+                    etiquetas: ['chef recomienda'],
+                    disponible: true
+                }
+            ]
+        },
+        {
+            id: 'bebidas',
+            nombre: 'Bebidas',
+            items: [
+                {
+                    id: 8,
+                    nombre: 'Agua de horchata',
+                    descripcion: 'Bebida tradicional de arroz con canela y un toque de vainilla',
+                    precio: 55,
+                    imagen: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400',
+                    etiquetas: ['refrescante'],
+                    disponible: true
+                },
+                {
+                    id: 9,
+                    nombre: 'Jamaica',
+                    descripcion: 'Infusión fría de flor de jamaica con un toque de limón',
+                    precio: 50,
+                    imagen: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400',
+                    etiquetas: ['refrescante'],
+                    disponible: true
+                },
+                {
+                    id: 10,
+                    nombre: 'Café de olla',
+                    descripcion: 'Café preparado con piloncillo, canela y clavo en olla de barro',
+                    precio: 45,
+                    imagen: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400',
+                    etiquetas: [],
+                    disponible: true
+                }
+            ]
+        },
+        {
+            id: 'postres',
+            nombre: 'Postres',
+            items: [
+                {
+                    id: 11,
+                    nombre: 'Flan napolitano',
+                    descripcion: 'Flan casero con caramelo, preparado con la receta de la abuela',
+                    precio: 85,
+                    imagen: 'https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400',
+                    etiquetas: ['popular'],
+                    disponible: true
+                },
+                {
+                    id: 12,
+                    nombre: 'Churros con chocolate',
+                    descripcion: 'Churros recién hechos con chocolate caliente para dipping',
+                    precio: 95,
+                    imagen: 'https://images.unsplash.com/photo-1624371414361-e670246e6832?w=400',
+                    etiquetas: ['chef recomienda'],
+                    disponible: true
+                }
+            ]
+        }
+    ]
+};
 
-// ── Estado ───────────────────────────────────
-let menuData = { restaurante: {}, categorias: [] };
-let activeCategory = 'all';
-let activeTag = 'all';
-let searchQuery = '';
+// ── Estado ─────────────────────────────────
+var activeCategory = 'all';
+var activeTag = 'all';
+var searchQuery = '';
 
-// ── Inicialización ────────────────────────────
-async function init() {
-    mostrarSkeletonMenu();
-    await cargarDatosMenu();
+// ── Init ───────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
     renderHeader();
     renderCategories();
     renderTagFilters();
     renderMenu();
     setupEventListeners();
     generateQR();
+});
 
-    // Registrar visita
-    db.registrarVisita('menu');
-}
-
-// ── Cargar datos del menú ─────────────────────
-async function cargarDatosMenu() {
-    try {
-        // Intentar cargar desde Google Sheets
-        const params = new URLSearchParams({
-            action: 'getMenu',
-            token: config.secretToken
-        });
-        const response = await db.getGoogle(params);
-
-        if (response.status === 'success' && response.categorias) {
-            menuData = response;
-            // Guardar en cache
-            localStorage.setItem('menu_cache', JSON.stringify(menuData));
-            localStorage.setItem('menu_cache_time', Date.now().toString());
-            return;
-        }
-    } catch (error) {
-        console.warn('⚠️ Google Sheets no disponible, usando datos locales');
-    }
-
-    // Fallback 1: Cache local reciente (menos de 1 hora)
-    const cacheTime = parseInt(localStorage.getItem('menu_cache_time') || '0');
-    const unaHora = 60 * 60 * 1000;
-    if (Date.now() - cacheTime < unaHora) {
-        const cache = localStorage.getItem('menu_cache');
-        if (cache) {
-            menuData = JSON.parse(cache);
-            console.log('📦 Usando cache del menú');
-            return;
-        }
-    }
-
-    // Fallback 2: JSON estático local
-    try {
-        const response = await fetch('../menu-digital/data/menu-data.json');
-        const data = await response.json();
-        menuData = data;
-        console.log('📄 Usando menú estático local');
-    } catch (e) {
-        console.error('❌ No se pudo cargar el menú');
-        menuData = getDatosDemo();
-    }
-}
-
-// ── Datos demo para cuando todo falla ────────
-function getDatosDemo() {
-    return {
-        restaurante: {
-            nombre: config.nombreNegocio || 'Tu Restaurante',
-            logo: '🍽️',
-            descripcion: 'Bienvenido a nuestro menú',
-            moneda: config.moneda || '$',
-            whatsapp: config.whatsapp
-        },
-        categorias: [
-            {
-                id: 'principales',
-                nombre: '🥩 Platos Principales',
-                items: [
-                    {
-                        id: 1,
-                        nombre: 'Plato del Día',
-                        descripcion: 'Consulta con nuestro equipo',
-                        precio: 15.00,
-                        imagen: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400',
-                        etiquetas: ['popular'],
-                        disponible: true
-                    }
-                ]
-            }
-        ]
-    };
-}
-
-// ── Skeleton loading ──────────────────────────
-function mostrarSkeletonMenu() {
-    const content = document.getElementById('menuContent');
-    if (!content) return;
-
-    content.innerHTML = `
-        <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-            ${Array(4).fill(0).map(() => `
-                <div style="
-                    display:flex;gap:16px;padding:16px;
-                    background:white;border-radius:10px;
-                    box-shadow:0 2px 8px rgba(0,0,0,0.06)
-                ">
-                    <div style="
-                        width:90px;height:90px;border-radius:10px;flex-shrink:0;
-                        background:linear-gradient(90deg,#f0f2f5 25%,#e9ecef 50%,#f0f2f5 75%);
-                        background-size:200% 100%;
-                        animation:shimmer 1.5s infinite
-                    "></div>
-                    <div style="flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center">
-                        <div style="
-                            height:16px;width:60%;border-radius:6px;
-                            background:linear-gradient(90deg,#f0f2f5 25%,#e9ecef 50%,#f0f2f5 75%);
-                            background-size:200% 100%;animation:shimmer 1.5s infinite
-                        "></div>
-                        <div style="
-                            height:12px;width:90%;border-radius:6px;
-                            background:linear-gradient(90deg,#f0f2f5 25%,#e9ecef 50%,#f0f2f5 75%);
-                            background-size:200% 100%;animation:shimmer 1.5s infinite
-                        "></div>
-                        <div style="
-                            height:12px;width:40%;border-radius:6px;
-                            background:linear-gradient(90deg,#f0f2f5 25%,#e9ecef 50%,#f0f2f5 75%);
-                            background-size:200% 100%;animation:shimmer 1.5s infinite
-                        "></div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-        <style>
-            @keyframes shimmer {
-                from { background-position: 200% 0; }
-                to { background-position: -200% 0; }
-            }
-        </style>
-    `;
-}
-
-// ── Render Header ─────────────────────────────
 function renderHeader() {
-    const logo = document.getElementById('restaurantLogo');
-    const nombre = document.getElementById('restaurantName');
-    const desc = document.getElementById('restaurantDesc');
-
-    if (logo) logo.textContent = menuData.restaurante?.logo || '🍽️';
-    if (nombre) nombre.textContent = menuData.restaurante?.nombre || 'Nuestro Menú';
-    if (desc) desc.textContent = menuData.restaurante?.descripcion || '';
-
-    document.title = menuData.restaurante?.nombre || 'Menú Digital';
+    var name = document.getElementById('restaurantName');
+    var desc = document.getElementById('restaurantDesc');
+    if (name) name.textContent = menuData.restaurante.nombre;
+    if (desc) desc.textContent = menuData.restaurante.descripcion;
 }
 
-// ── Render Categorías ─────────────────────────
 function renderCategories() {
-    const nav = document.getElementById('categoryNav');
+    var nav = document.getElementById('categoryNav');
     if (!nav) return;
 
-    // Mantener el botón "Todos"
-    const todosBtn = nav.querySelector('[data-category="all"]');
-    nav.innerHTML = '';
-    if (todosBtn) nav.appendChild(todosBtn);
-
-    menuData.categorias?.forEach(cat => {
-        const btn = document.createElement('button');
+    menuData.categorias.forEach(function(cat) {
+        var btn = document.createElement('button');
         btn.className = 'category-btn';
-        btn.dataset.category = cat.id;
+        btn.setAttribute('data-category', cat.id);
         btn.textContent = cat.nombre;
         nav.appendChild(btn);
     });
 }
 
-// ── Render Tag Filters ────────────────────────
 function renderTagFilters() {
-    // Recopilar todas las etiquetas únicas del menú
-    const todasEtiquetas = new Set();
-    menuData.categorias?.forEach(cat => {
-        cat.items?.forEach(item => {
-            item.etiquetas?.forEach(tag => todasEtiquetas.add(tag));
+    var allTags = {};
+    menuData.categorias.forEach(function(cat) {
+        cat.items.forEach(function(item) {
+            (item.etiquetas || []).forEach(function(tag) {
+                allTags[tag] = true;
+            });
         });
     });
 
-    const container = document.getElementById('tagFilters');
+    var container = document.getElementById('tagFilters');
     if (!container) return;
 
-    const todosBtn = container.querySelector('[data-tag="all"]');
-    container.innerHTML = '';
-    if (todosBtn) container.appendChild(todosBtn);
-
-    const emojis = {
-        vegetariano: '🌱',
-        popular: '⭐',
-        'chef recomienda': '👨‍🍳',
-        saludable: '💚',
-        picante: '🌶️',
-        nuevo: '✨',
-        oferta: '🏷️'
+    var iconMap = {
+        'vegetariano': 'ph-leaf',
+        'popular': 'ph-star',
+        'chef recomienda': 'ph-chef-hat',
+        'saludable': 'ph-heart',
+        'refrescante': 'ph-drop'
     };
 
-    todasEtiquetas.forEach(tag => {
-        const btn = document.createElement('button');
+    Object.keys(allTags).forEach(function(tag) {
+        var btn = document.createElement('button');
         btn.className = 'tag-btn';
-        btn.dataset.tag = tag;
-        btn.textContent = `${emojis[tag] || '•'} ${tag}`;
+        btn.setAttribute('data-tag', tag);
+        var iconClass = iconMap[tag] || 'ph-circle';
+        btn.innerHTML = '<i class="ph ' + iconClass + '"></i> ' + tag;
         container.appendChild(btn);
     });
 }
 
-// ── Render Menú ───────────────────────────────
 function renderMenu() {
-    const content = document.getElementById('menuContent');
+    var content = document.getElementById('menuContent');
     if (!content) return;
-
     content.innerHTML = '';
-    let totalItems = 0;
 
-    menuData.categorias?.forEach(cat => {
+    var hasResults = false;
+
+    menuData.categorias.forEach(function(cat) {
         if (activeCategory !== 'all' && cat.id !== activeCategory) return;
 
-        const filteredItems = (cat.items || []).filter(item => {
+        var filtered = cat.items.filter(function(item) {
             if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                const matchName = item.nombre.toLowerCase().includes(q);
-                const matchDesc = (item.descripcion || '').toLowerCase().includes(q);
+                var q = searchQuery.toLowerCase();
+                var matchName = item.nombre.toLowerCase().indexOf(q) !== -1;
+                var matchDesc = (item.descripcion || '').toLowerCase().indexOf(q) !== -1;
                 if (!matchName && !matchDesc) return false;
             }
             if (activeTag !== 'all') {
-                if (!(item.etiquetas || []).includes(activeTag)) return false;
+                if ((item.etiquetas || []).indexOf(activeTag) === -1) return false;
             }
             return true;
         });
 
-        if (filteredItems.length === 0) return;
-        totalItems += filteredItems.length;
+        if (filtered.length === 0) return;
+        hasResults = true;
 
-        const section = document.createElement('div');
+        var section = document.createElement('div');
         section.className = 'category-section';
-        section.innerHTML = `<h3 class="category-title">${cat.nombre}</h3>`;
-        filteredItems.forEach(item => section.appendChild(createMenuItem(item)));
+        section.innerHTML = '<h3 class="category-title">' + cat.nombre + '</h3>';
+
+        filtered.forEach(function(item) {
+            section.appendChild(createMenuItem(item));
+        });
+
         content.appendChild(section);
     });
 
-    if (totalItems === 0) {
-        content.innerHTML = `
-            <div class="no-results">
-                <div style="font-size:3rem;margin-bottom:12px">🔍</div>
-                <h3>Sin resultados</h3>
-                <p>Intenta con otra búsqueda o categoría</p>
-            </div>
-        `;
+    if (!hasResults) {
+        content.innerHTML =
+            '<div class="no-results">' +
+            '<i class="ph ph-magnifying-glass"></i>' +
+            '<h3>Sin resultados</h3>' +
+            '<p>Intenta con otra búsqueda</p>' +
+            '</div>';
     }
 }
 
-// ── Crear Item ────────────────────────────────
 function createMenuItem(item) {
-    const div = document.createElement('div');
-    div.className = `menu-item ${!item.disponible ? 'unavailable' : ''}`;
+    var div = document.createElement('div');
+    div.className = 'menu-item' + (!item.disponible ? ' unavailable' : '');
 
     if (item.disponible) {
-        div.onclick = () => openModal(item);
+        div.onclick = function() { openModal(item); };
     }
 
-    const moneda = menuData.restaurante?.moneda || '$';
-    const tagsHtml = (item.etiquetas || []).map(tag =>
-        `<span class="item-tag ${tag === 'popular' ? 'popular' : ''}">${tag}</span>`
-    ).join('');
+    var moneda = menuData.restaurante.moneda;
+    var tags = (item.etiquetas || []).map(function(tag) {
+        return '<span class="item-tag' + (tag === 'popular' ? ' popular' : '') + '">' + tag + '</span>';
+    }).join('');
 
-    div.innerHTML = `
-        <img class="menu-item-image"
-             src="${item.imagen || 'https://via.placeholder.com/90x90?text=🍽️'}"
-             alt="${item.nombre}"
-             onerror="this.src='https://via.placeholder.com/90x90?text=🍽️'"
-             loading="lazy">
-        <div class="menu-item-info">
-            <div>
-                <div class="menu-item-name">${item.nombre}</div>
-                <div class="menu-item-desc">${item.descripcion || ''}</div>
-            </div>
-            <div class="menu-item-bottom">
-                <span class="menu-item-price">${moneda}${parseFloat(item.precio).toFixed(2)}</span>
-                <div class="menu-item-tags">${tagsHtml}</div>
-            </div>
-        </div>
-        ${!item.disponible ? '<span class="unavailable-badge">Agotado</span>' : ''}
-    `;
+    div.innerHTML =
+        '<img class="menu-item-image" ' +
+        'src="' + (item.imagen || 'https://via.placeholder.com/80?text=Menu') + '" ' +
+        'alt="' + item.nombre + '" loading="lazy" ' +
+        'onerror="this.src=\'https://via.placeholder.com/80?text=Menu\'">' +
+        '<div class="menu-item-info">' +
+            '<div>' +
+                '<div class="menu-item-name">' + item.nombre + '</div>' +
+                '<div class="menu-item-desc">' + (item.descripcion || '') + '</div>' +
+            '</div>' +
+            '<div class="menu-item-bottom">' +
+                '<span class="menu-item-price">' + moneda + item.precio.toFixed(2) + '</span>' +
+                '<div class="menu-item-tags">' + tags + '</div>' +
+            '</div>' +
+        '</div>' +
+        (!item.disponible ? '<span class="unavailable-badge">Agotado</span>' : '');
 
     return div;
 }
 
-// ── Modal ─────────────────────────────────────
 function openModal(item) {
-    const overlay = document.getElementById('modalOverlay');
+    var overlay = document.getElementById('modalOverlay');
     if (!overlay) return;
 
-    const moneda = menuData.restaurante?.moneda || '$';
-    const whatsapp = menuData.restaurante?.whatsapp || config.whatsapp;
+    var moneda = menuData.restaurante.moneda;
+    var wp = menuData.restaurante.whatsapp;
 
-    document.getElementById('modalImage').style.backgroundImage = `url(${item.imagen})`;
+    document.getElementById('modalImage').style.backgroundImage = 'url(' + item.imagen + ')';
     document.getElementById('modalName').textContent = item.nombre;
     document.getElementById('modalDesc').textContent = item.descripcion || '';
-    document.getElementById('modalPrice').textContent =
-        `${moneda}${parseFloat(item.precio).toFixed(2)}`;
+    document.getElementById('modalPrice').textContent = moneda + item.precio.toFixed(2);
 
-    const tagsContainer = document.getElementById('modalTags');
-    if (tagsContainer) {
-        tagsContainer.innerHTML = (item.etiquetas || []).map(tag =>
-            `<span class="item-tag ${tag === 'popular' ? 'popular' : ''}">${tag}</span>`
-        ).join('');
+    var tagsEl = document.getElementById('modalTags');
+    if (tagsEl) {
+        tagsEl.innerHTML = (item.etiquetas || []).map(function(tag) {
+            return '<span class="item-tag' + (tag === 'popular' ? ' popular' : '') + '">' + tag + '</span>';
+        }).join('');
     }
 
-    const mensaje = `Hola! Me gustaría pedir: *${item.nombre}* (${moneda}${parseFloat(item.precio).toFixed(2)})`;
-    const whatsappBtn = document.getElementById('modalWhatsapp');
-    if (whatsappBtn) {
-        whatsappBtn.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(mensaje)}`;
+    var msg = 'Hola! Me gustaría pedir: *' + item.nombre + '* (' + moneda + item.precio.toFixed(2) + ')';
+    var wpBtn = document.getElementById('modalWhatsapp');
+    if (wpBtn) {
+        wpBtn.href = 'https://wa.me/' + wp + '?text=' + encodeURIComponent(msg);
     }
 
     overlay.classList.add('active');
@@ -330,70 +322,81 @@ function openModal(item) {
 }
 
 function closeModal() {
-    const overlay = document.getElementById('modalOverlay');
+    var overlay = document.getElementById('modalOverlay');
     if (overlay) overlay.classList.remove('active');
     document.body.style.overflow = '';
 }
 
-// ── QR Code ───────────────────────────────────
 function generateQR() {
-    const currentURL = window.location.href;
-    const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentURL)}&color=6C63FF&bgcolor=FFFFFF`;
-    const qrImg = document.getElementById('qrImage');
-    if (qrImg) qrImg.src = qrURL;
+    var url = window.location.href;
+    var qrURL = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' +
+        encodeURIComponent(url) + '&color=D4738C&bgcolor=FFFFFF';
+    var img = document.getElementById('qrImage');
+    if (img) img.src = qrURL;
 }
 
-// ── Event Listeners ───────────────────────────
 function setupEventListeners() {
-    // Categorías
-    document.getElementById('categoryNav')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('.category-btn');
-        if (!btn) return;
-        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeCategory = btn.dataset.category;
-        renderMenu();
-    });
+    // Categories
+    var catNav = document.getElementById('categoryNav');
+    if (catNav) {
+        catNav.addEventListener('click', function(e) {
+            var btn = e.target.closest('.category-btn');
+            if (!btn) return;
+            document.querySelectorAll('.category-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeCategory = btn.getAttribute('data-category');
+            renderMenu();
+        });
+    }
 
     // Tags
-    document.getElementById('tagFilters')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('.tag-btn');
-        if (!btn) return;
-        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeTag = btn.dataset.tag;
-        renderMenu();
-    });
-
-    // Búsqueda con debounce
-    let searchTimer;
-    document.getElementById('searchInput')?.addEventListener('input', (e) => {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            searchQuery = e.target.value.trim();
+    var tagContainer = document.getElementById('tagFilters');
+    if (tagContainer) {
+        tagContainer.addEventListener('click', function(e) {
+            var btn = e.target.closest('.tag-btn');
+            if (!btn) return;
+            document.querySelectorAll('.tag-btn').forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeTag = btn.getAttribute('data-tag');
             renderMenu();
-        }, 300);
-    });
+        });
+    }
+
+    // Search
+    var searchInput = document.getElementById('searchInput');
+    var searchTimer;
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                searchQuery = e.target.value.trim();
+                renderMenu();
+            }, 300);
+        });
+    }
 
     // Modal
-    document.getElementById('modalClose')?.addEventListener('click', closeModal);
-    document.getElementById('modalOverlay')?.addEventListener('click', (e) => {
+    var closeBtn = document.getElementById('modalClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    var overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.addEventListener('click', function(e) {
         if (e.target === e.currentTarget) closeModal();
     });
 
     // QR
-    document.getElementById('fabQR')?.addEventListener('click', () => {
-        document.getElementById('qrModal')?.classList.add('active');
-    });
-    document.getElementById('closeQR')?.addEventListener('click', () => {
-        document.getElementById('qrModal')?.classList.remove('active');
+    var qrBtn = document.getElementById('fabQR');
+    if (qrBtn) qrBtn.addEventListener('click', function() {
+        document.getElementById('qrModal').classList.add('active');
     });
 
-    // Cerrar modal con Escape
-    document.addEventListener('keydown', (e) => {
+    var closeQR = document.getElementById('closeQR');
+    if (closeQR) closeQR.addEventListener('click', function() {
+        document.getElementById('qrModal').classList.remove('active');
+    });
+
+    // Escape key
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeModal();
     });
 }
-
-// ── Iniciar ───────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
