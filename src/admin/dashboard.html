@@ -18,20 +18,20 @@
 
             <span class="sidebar-section-title">Principal</span>
             <ul class="sidebar-nav">
-                <li><a href="#" class="active"><i class="ph ph-house"></i> Dashboard</a></li>
+                <li><a href="#dashboard" class="active" data-view="dashboard"><i class="ph ph-house"></i> Dashboard</a></li>
                 <li>
-                    <a href="#"><i class="ph ph-calendar-check"></i> Reservas
+                    <a href="#reservas" data-view="reservas"><i class="ph ph-calendar-check"></i> Reservas
                         <span class="sidebar-badge" id="pendientes-badge" style="display:none">0</span>
                     </a>
                 </li>
-                <li><a href="#"><i class="ph ph-fork-knife"></i> Menú</a></li>
-                <li><a href="#"><i class="ph ph-envelope-simple"></i> Contactos</a></li>
+                <li><a href="#menu" data-view="menu"><i class="ph ph-fork-knife"></i> Menú</a></li>
+                <li><a href="#contactos" data-view="contactos"><i class="ph ph-envelope-simple"></i> Contactos</a></li>
             </ul>
 
             <span class="sidebar-section-title">Sistema</span>
             <ul class="sidebar-nav">
-                <li><a href="#"><i class="ph ph-chart-bar"></i> Analytics</a></li>
-                <li><a href="#"><i class="ph ph-gear-six"></i> Configuración</a></li>
+                <li><a href="#analytics" data-view="analytics"><i class="ph ph-chart-bar"></i> Analytics</a></li>
+                <li><a href="#configuracion" data-view="configuracion"><i class="ph ph-gear-six"></i> Configuración</a></li>
             </ul>
 
             <div class="sidebar-footer">
@@ -51,98 +51,146 @@
                     <button class="btn btn-icon" id="sidebarToggle" style="display:none">
                         <i class="ph ph-list"></i>
                     </button>
-                    <h1><i class="ph ph-squares-four"></i> Dashboard</h1>
+                    <h1 id="pageTitle"><i class="ph ph-squares-four"></i> Dashboard</h1>
                     <p id="currentDate"></p>
                 </div>
                 <div class="page-header-right">
                     <div id="conexion-status" class="connection-pill"></div>
-                    <button class="btn btn-outline btn-sm" onclick="location.reload()">
+                    <button class="btn btn-outline btn-sm" id="refreshAdmin">
                         <i class="ph ph-arrow-clockwise"></i> Refrescar
                     </button>
                 </div>
             </div>
 
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Reservas Hoy</span>
-                        <div class="stat-card-icon icon-rose">
-                            <i class="ph ph-calendar-blank"></i>
+            <section class="admin-view active" id="view-dashboard" data-title="Dashboard" data-icon="ph-squares-four">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-label">Reservas Hoy</span>
+                            <div class="stat-card-icon icon-rose"><i class="ph ph-calendar-blank"></i></div>
                         </div>
+                        <div class="stat-card-value" id="stat-hoy">-</div>
                     </div>
-                    <div class="stat-card-value" id="stat-hoy">-</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Total Reservas</span>
-                        <div class="stat-card-icon icon-olive">
-                            <i class="ph ph-calendar-check"></i>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-label">Total Reservas</span>
+                            <div class="stat-card-icon icon-olive"><i class="ph ph-calendar-check"></i></div>
                         </div>
+                        <div class="stat-card-value" id="stat-total">-</div>
                     </div>
-                    <div class="stat-card-value" id="stat-total">-</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Personas Hoy</span>
-                        <div class="stat-card-icon icon-terra">
-                            <i class="ph ph-users-three"></i>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-label">Personas Hoy</span>
+                            <div class="stat-card-icon icon-terra"><i class="ph ph-users-three"></i></div>
                         </div>
+                        <div class="stat-card-value" id="stat-personas">-</div>
                     </div>
-                    <div class="stat-card-value" id="stat-personas">-</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-card-header">
-                        <span class="stat-card-label">Visitas Menú</span>
-                        <div class="stat-card-icon icon-gold">
-                            <i class="ph ph-eye"></i>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-label">Visitas Menú</span>
+                            <div class="stat-card-icon icon-gold"><i class="ph ph-eye"></i></div>
                         </div>
-                    </div>
-                    <div class="stat-card-value" id="stat-visitas">-</div>
-                </div>
-            </div>
-
-            <div class="card filters-card">
-                <div class="card-body">
-                    <div class="filters-row">
-                        <div class="filter-search">
-                            <input type="text" id="filtro-busqueda" class="form-control"
-                                   placeholder="Buscar por nombre, teléfono o código...">
-                        </div>
-                        <select id="filtro-estado" class="form-control">
-                            <option value="all">Todos los estados</option>
-                            <option value="confirmada">Confirmadas</option>
-                            <option value="pendiente">Pendientes</option>
-                            <option value="cancelada">Canceladas</option>
-                        </select>
-                        <input type="date" id="filtro-fecha" class="form-control">
-                        <button class="btn btn-outline btn-sm" id="btn-limpiar-filtros">
-                            <i class="ph ph-x"></i> Limpiar
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="btn-exportar">
-                            <i class="ph ph-download-simple"></i> Exportar CSV
-                        </button>
+                        <div class="stat-card-value" id="stat-visitas">-</div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="ph ph-list-bullets"></i> Reservas</h2>
-                    <span id="tabla-info"></span>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ph ph-calendar-check"></i> Próximas reservas</h2>
+                            <a class="card-link" href="#reservas" data-view-link="reservas">Ver todas</a>
+                        </div>
+                        <div id="dashboard-reservas"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="ph ph-envelope-simple"></i> Contactos recientes</h2>
+                            <a class="card-link" href="#contactos" data-view-link="contactos">Ver todos</a>
+                        </div>
+                        <div id="dashboard-contactos"></div>
+                    </div>
                 </div>
-                <div id="reservas-table-container"></div>
-            </div>
+            </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="ph ph-envelope-simple"></i> Contactos recientes</h2>
-                    <span id="contactos-info"></span>
+            <section class="admin-view" id="view-reservas" data-title="Reservas" data-icon="ph-calendar-check">
+                <div class="card filters-card">
+                    <div class="card-body">
+                        <div class="filters-row">
+                            <div class="filter-search">
+                                <input type="text" id="filtro-busqueda" class="form-control"
+                                       placeholder="Buscar por nombre, teléfono o código...">
+                            </div>
+                            <select id="filtro-estado" class="form-control">
+                                <option value="all">Todos los estados</option>
+                                <option value="confirmada">Confirmadas</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="cancelada">Canceladas</option>
+                            </select>
+                            <input type="date" id="filtro-fecha" class="form-control">
+                            <button class="btn btn-outline btn-sm" id="btn-limpiar-filtros">
+                                <i class="ph ph-x"></i> Limpiar
+                            </button>
+                            <button class="btn btn-primary btn-sm" id="btn-exportar">
+                                <i class="ph ph-download-simple"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div id="contactos-table-container"></div>
-            </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ph ph-list-bullets"></i> Reservas</h2>
+                        <span id="tabla-info"></span>
+                    </div>
+                    <div id="reservas-table-container"></div>
+                </div>
+            </section>
+
+            <section class="admin-view" id="view-menu" data-title="Menú" data-icon="ph-fork-knife">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ph ph-fork-knife"></i> Menú digital</h2>
+                        <span id="menu-info"></span>
+                    </div>
+                    <div id="menu-admin-container"></div>
+                </div>
+            </section>
+
+            <section class="admin-view" id="view-contactos" data-title="Contactos" data-icon="ph-envelope-simple">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="ph ph-envelope-simple"></i> Contactos</h2>
+                        <span id="contactos-info"></span>
+                    </div>
+                    <div id="contactos-table-container"></div>
+                </div>
+            </section>
+
+            <section class="admin-view" id="view-analytics" data-title="Analytics" data-icon="ph-chart-bar">
+                <div class="stats-grid compact-stats">
+                    <div class="stat-card"><span class="stat-card-label">Confirmadas</span><div class="stat-card-value" id="stat-confirmadas">-</div></div>
+                    <div class="stat-card"><span class="stat-card-label">Canceladas</span><div class="stat-card-value" id="stat-canceladas">-</div></div>
+                    <div class="stat-card"><span class="stat-card-label">Contactos</span><div class="stat-card-value" id="stat-contactos">-</div></div>
+                    <div class="stat-card"><span class="stat-card-label">Platillos activos</span><div class="stat-card-value" id="stat-menu-activos">-</div></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header"><h2><i class="ph ph-chart-line-up"></i> Reservas por estado</h2></div>
+                        <div id="analytics-estados"></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h2><i class="ph ph-clock"></i> Horarios más usados</h2></div>
+                        <div id="analytics-horas"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-view" id="view-configuracion" data-title="Configuración" data-icon="ph-gear-six">
+                <div class="card">
+                    <div class="card-header"><h2><i class="ph ph-sliders-horizontal"></i> Configuración del sistema</h2></div>
+                    <div class="settings-grid" id="configuracion-container"></div>
+                </div>
+            </section>
         </main>
     </div>
 
