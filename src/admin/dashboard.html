@@ -4,35 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Proyecto Negocios</title>
+    <script src="../../public/env.js"></script>
     <link rel="stylesheet" href="admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
     <div class="admin-layout">
-
-        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <div class="logo-icon">◆</div>
+                <div class="logo-icon"><i class="ph ph-storefront"></i></div>
                 <span>Admin</span>
             </div>
 
             <span class="sidebar-section-title">Principal</span>
             <ul class="sidebar-nav">
-                <li><a href="#" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="#" class="active"><i class="ph ph-house"></i> Dashboard</a></li>
                 <li>
-                    <a href="#"><i class="fas fa-calendar-check"></i> Reservas
+                    <a href="#"><i class="ph ph-calendar-check"></i> Reservas
                         <span class="sidebar-badge" id="pendientes-badge" style="display:none">0</span>
                     </a>
                 </li>
-                <li><a href="#"><i class="fas fa-utensils"></i> Menú</a></li>
-                <li><a href="#"><i class="fas fa-envelope"></i> Contactos</a></li>
+                <li><a href="#"><i class="ph ph-fork-knife"></i> Menú</a></li>
+                <li><a href="#"><i class="ph ph-envelope-simple"></i> Contactos</a></li>
             </ul>
 
             <span class="sidebar-section-title">Sistema</span>
             <ul class="sidebar-nav">
-                <li><a href="#"><i class="fas fa-chart-bar"></i> Analytics</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Configuración</a></li>
+                <li><a href="#"><i class="ph ph-chart-bar"></i> Analytics</a></li>
+                <li><a href="#"><i class="ph ph-gear-six"></i> Configuración</a></li>
             </ul>
 
             <div class="sidebar-footer">
@@ -46,323 +45,107 @@
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="main-content">
-
-            <!-- Header -->
             <div class="page-header">
                 <div class="page-header-left">
                     <button class="btn btn-icon" id="sidebarToggle" style="display:none">
-                        <i class="fas fa-bars"></i>
+                        <i class="ph ph-list"></i>
                     </button>
-                    <h1>📊 Dashboard</h1>
+                    <h1><i class="ph ph-squares-four"></i> Dashboard</h1>
                     <p id="currentDate"></p>
                 </div>
                 <div class="page-header-right">
-                    <div id="conexion-status" style="
-                        display:inline-flex;align-items:center;gap:6px;
-                        padding:6px 14px;border-radius:50px;font-size:0.78rem;font-weight:600;
-                    "></div>
+                    <div id="conexion-status" class="connection-pill"></div>
                     <button class="btn btn-outline btn-sm" onclick="location.reload()">
-                        <i class="fas fa-sync-alt"></i> Refrescar
+                        <i class="ph ph-arrow-clockwise"></i> Refrescar
                     </button>
                 </div>
             </div>
 
-            <!-- Stats -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-card-label">Reservas Hoy</span>
-                        <div class="stat-card-icon" style="background:rgba(108,99,255,0.1);color:#6C63FF">
-                            <i class="fas fa-calendar-day"></i>
+                        <div class="stat-card-icon icon-rose">
+                            <i class="ph ph-calendar-blank"></i>
                         </div>
                     </div>
                     <div class="stat-card-value" id="stat-hoy">-</div>
                 </div>
+
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-card-label">Total Reservas</span>
-                        <div class="stat-card-icon" style="background:rgba(0,212,170,0.1);color:#00D4AA">
-                            <i class="fas fa-calendar-check"></i>
+                        <div class="stat-card-icon icon-olive">
+                            <i class="ph ph-calendar-check"></i>
                         </div>
                     </div>
                     <div class="stat-card-value" id="stat-total">-</div>
                 </div>
+
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-card-label">Personas Hoy</span>
-                        <div class="stat-card-icon" style="background:rgba(255,107,107,0.1);color:#FF6B6B">
-                            <i class="fas fa-users"></i>
+                        <div class="stat-card-icon icon-terra">
+                            <i class="ph ph-users-three"></i>
                         </div>
                     </div>
                     <div class="stat-card-value" id="stat-personas">-</div>
                 </div>
+
                 <div class="stat-card">
                     <div class="stat-card-header">
                         <span class="stat-card-label">Visitas Menú</span>
-                        <div class="stat-card-icon" style="background:rgba(255,193,7,0.1);color:#FFC107">
-                            <i class="fas fa-eye"></i>
+                        <div class="stat-card-icon icon-gold">
+                            <i class="ph ph-eye"></i>
                         </div>
                     </div>
                     <div class="stat-card-value" id="stat-visitas">-</div>
                 </div>
             </div>
 
-            <!-- Filtros -->
-            <div class="card" style="margin-bottom:16px">
-                <div class="card-body" style="padding:16px 24px">
-                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-                        <div style="flex:1;min-width:150px">
+            <div class="card filters-card">
+                <div class="card-body">
+                    <div class="filters-row">
+                        <div class="filter-search">
                             <input type="text" id="filtro-busqueda" class="form-control"
-                                   placeholder="🔍 Buscar por nombre...">
+                                   placeholder="Buscar por nombre, teléfono o código...">
                         </div>
-                        <select id="filtro-estado" class="form-control" style="width:auto;min-width:140px">
+                        <select id="filtro-estado" class="form-control">
                             <option value="all">Todos los estados</option>
-                            <option value="confirmada">✅ Confirmadas</option>
-                            <option value="pendiente">⏳ Pendientes</option>
-                            <option value="cancelada">❌ Canceladas</option>
+                            <option value="confirmada">Confirmadas</option>
+                            <option value="pendiente">Pendientes</option>
+                            <option value="cancelada">Canceladas</option>
                         </select>
-                        <input type="date" id="filtro-fecha" class="form-control" style="width:auto">
+                        <input type="date" id="filtro-fecha" class="form-control">
                         <button class="btn btn-outline btn-sm" id="btn-limpiar-filtros">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="ph ph-x"></i> Limpiar
                         </button>
                         <button class="btn btn-primary btn-sm" id="btn-exportar">
-                            <i class="fas fa-download"></i> Exportar CSV
+                            <i class="ph ph-download-simple"></i> Exportar CSV
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Tabla -->
             <div class="card">
                 <div class="card-header">
-                    <h2>📋 Reservas</h2>
-                    <span style="font-size:0.82rem;color:#6c757d" id="tabla-info"></span>
+                    <h2><i class="ph ph-list-bullets"></i> Reservas</h2>
+                    <span id="tabla-info"></span>
                 </div>
-                <div id="reservas-table-container">
-                    <!-- Se llena dinámicamente -->
-                </div>
+                <div id="reservas-table-container"></div>
             </div>
 
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="ph ph-envelope-simple"></i> Contactos recientes</h2>
+                    <span id="contactos-info"></span>
+                </div>
+                <div id="contactos-table-container"></div>
+            </div>
         </main>
     </div>
 
-    <script type="module">
-        import { db } from '../shared/database.js';
-
-        // ── Fecha actual ────────────────
-        document.getElementById('currentDate').textContent =
-            new Date().toLocaleDateString('es-ES', {
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-            });
-
-        // ── Estado de conexión ──────────
-        async function verificarConexion() {
-            const statusEl = document.getElementById('conexion-status');
-            try {
-                const online = await db.verificarConexion();
-                if (online) {
-                    statusEl.style.background = 'rgba(0,212,170,0.1)';
-                    statusEl.style.color = '#00D4AA';
-                    statusEl.innerHTML = '🟢 Google Sheets conectado';
-                } else {
-                    throw new Error();
-                }
-            } catch {
-                statusEl.style.background = 'rgba(255,193,7,0.1)';
-                statusEl.style.color = '#d4a017';
-                statusEl.innerHTML = '🟡 Modo offline (datos locales)';
-            }
-        }
-
-        // ── Cargar estadísticas ─────────
-        async function cargarStats() {
-            const stats = await db.obtenerStats();
-
-            document.getElementById('stat-hoy').textContent = stats.reservasHoy || 0;
-            document.getElementById('stat-total').textContent = stats.totalReservas || 0;
-            document.getElementById('stat-personas').textContent = stats.personasHoy || 0;
-            document.getElementById('stat-visitas').textContent = stats.totalVisitas || 0;
-
-            // Badge pendientes
-            const badge = document.getElementById('pendientes-badge');
-            if (stats.pendientes > 0) {
-                badge.textContent = stats.pendientes;
-                badge.style.display = 'block';
-            }
-        }
-
-        // ── Cargar tabla de reservas ────
-        async function cargarReservas() {
-            const container = document.getElementById('reservas-table-container');
-
-            container.innerHTML = `
-                <div style="padding:40px;text-align:center;color:#6c757d">
-                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:12px"></i>
-                    <p>Cargando reservas...</p>
-                </div>
-            `;
-
-            const reservas = await db.obtenerReservas();
-
-            if (!reservas || reservas.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:60px;color:#6c757d">
-                        <div style="font-size:3rem;margin-bottom:12px">📅</div>
-                        <h3>No hay reservas todavía</h3>
-                        <p style="font-size:0.85rem">Las reservas aparecerán aquí cuando los clientes las hagan</p>
-                    </div>
-                `;
-                document.getElementById('tabla-info').textContent = '0 reservas';
-                return;
-            }
-
-            // Aplicar filtros del frontend
-            let filtradas = [...reservas];
-            const busqueda = document.getElementById('filtro-busqueda')?.value?.toLowerCase();
-            const estado = document.getElementById('filtro-estado')?.value;
-            const fecha = document.getElementById('filtro-fecha')?.value;
-
-            if (busqueda) {
-                filtradas = filtradas.filter(r =>
-                    (r.nombre || '').toLowerCase().includes(busqueda) ||
-                    (r.codigo || '').toLowerCase().includes(busqueda)
-                );
-            }
-            if (estado && estado !== 'all') {
-                filtradas = filtradas.filter(r => r.estado === estado);
-            }
-            if (fecha) {
-                filtradas = filtradas.filter(r => r.fecha === fecha);
-            }
-
-            document.getElementById('tabla-info').textContent =
-                `${filtradas.length} de ${reservas.length} reservas`;
-
-            if (filtradas.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align:center;padding:40px;color:#6c757d">
-                        <p>No se encontraron reservas con estos filtros</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Cliente</th>
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Personas</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filtradas.map(r => `
-                                <tr>
-                                    <td><code style="color:#6C63FF;font-weight:600">${r.codigo || 'N/A'}</code></td>
-                                    <td>
-                                        <div style="font-weight:600">${r.nombre}</div>
-                                        <div style="font-size:0.78rem;color:#6c757d">${r.telefono}</div>
-                                    </td>
-                                    <td>${r.fecha || ''}</td>
-                                    <td>${r.hora || ''}</td>
-                                    <td style="text-align:center"><strong>${r.personas}</strong></td>
-                                    <td>${getBadge(r.estado)}</td>
-                                    <td>
-                                        <div style="display:flex;gap:4px">
-                                            <button class="btn btn-icon btn-sm"
-                                                    style="background:rgba(37,211,102,0.1);color:#25D366"
-                                                    onclick="contactarWhatsApp('${r.telefono}', '${r.nombre}')">
-                                                <i class="fab fa-whatsapp"></i>
-                                            </button>
-                                            ${r.estado !== 'cancelada' ? `
-                                                <button class="btn btn-icon btn-sm"
-                                                        style="background:rgba(255,107,107,0.1);color:#FF6B6B"
-                                                        onclick="cancelar('${r.codigo}')">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            ` : ''}
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function getBadge(estado) {
-            const configs = {
-                confirmada: { cls: 'badge-success', txt: '✓ Confirmada' },
-                pendiente:  { cls: 'badge-warning', txt: '⏳ Pendiente' },
-                cancelada:  { cls: 'badge-danger', txt: '✗ Cancelada' }
-            };
-            const c = configs[estado] || configs.pendiente;
-            return `<span class="badge ${c.cls}">${c.txt}</span>`;
-        }
-
-        // ── Acciones globales ───────────
-        window.cancelar = async (codigo) => {
-            if (!confirm(`¿Cancelar reserva ${codigo}?`)) return;
-            await db.actualizarEstadoReserva(codigo, 'cancelada');
-            await cargarReservas();
-            await cargarStats();
-        };
-
-        window.contactarWhatsApp = (tel, nombre) => {
-            const msg = `Hola ${nombre}! 👋 Te contactamos sobre tu reserva. ¿En qué podemos ayudarte?`;
-            window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        // ── Exportar CSV ─────────────────
-        document.getElementById('btn-exportar')?.addEventListener('click', async () => {
-            const reservas = await db.obtenerReservas();
-            if (!reservas.length) return alert('No hay datos para exportar');
-
-            const csv = [
-                'Codigo,Nombre,Telefono,Email,Fecha,Hora,Personas,Notas,Estado',
-                ...reservas.map(r =>
-                    `${r.codigo},${r.nombre},${r.telefono},${r.email || ''},"${r.fecha}",${r.hora},${r.personas},"${r.notas || ''}",${r.estado}`
-                )
-            ].join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `reservas_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-        });
-
-        // ── Filtros ──────────────────────
-        document.getElementById('filtro-busqueda')?.addEventListener('input', () => cargarReservas());
-        document.getElementById('filtro-estado')?.addEventListener('change', () => cargarReservas());
-        document.getElementById('filtro-fecha')?.addEventListener('change', () => cargarReservas());
-        document.getElementById('btn-limpiar-filtros')?.addEventListener('click', () => {
-            document.getElementById('filtro-busqueda').value = '';
-            document.getElementById('filtro-estado').value = 'all';
-            document.getElementById('filtro-fecha').value = '';
-            cargarReservas();
-        });
-
-        // ── Inicializar ─────────────────
-        verificarConexion();
-        cargarStats();
-        cargarReservas();
-
-        // Auto-refresh cada 60 segundos
-        setInterval(() => {
-            cargarStats();
-            cargarReservas();
-        }, 60000);
-    </script>
+    <script type="module" src="admin.js"></script>
 </body>
 </html>

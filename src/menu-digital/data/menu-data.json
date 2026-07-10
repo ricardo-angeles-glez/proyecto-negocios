@@ -2,14 +2,14 @@
 {
     "restaurante": {
         "nombre": "Tu Restaurante",
-        "logo": "🍽️",
+        "logo": "ph-fork-knife",
         "descripcion": "Cocina con pasión desde 2020",
         "moneda": "$"
     },
     "categorias": [
         {
             "id": "entradas",
-            "nombre": "🥗 Entradas",
+            "nombre": "Entradas",
             "items": [
                 {
                     "id": 1,
@@ -33,7 +33,7 @@
         },
         {
             "id": "principales",
-            "nombre": "🥩 Platos Principales",
+            "nombre": "Platos Principales",
             "items": [
                 {
                     "id": 3,
@@ -66,7 +66,7 @@
         },
         {
             "id": "bebidas",
-            "nombre": "🍷 Bebidas",
+            "nombre": "Bebidas",
             "items": [
                 {
                     "id": 6,
@@ -90,7 +90,7 @@
         },
         {
             "id": "postres",
-            "nombre": "🍰 Postres",
+            "nombre": "Postres",
             "items": [
                 {
                     "id": 8,

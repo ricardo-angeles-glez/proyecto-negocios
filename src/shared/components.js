@@ -4,7 +4,7 @@
 
 // ── Navbar ────────────────────────────────────
 export function crearNavbar({
-    logo = '◆',
+    logo = '<i class="ph ph-storefront"></i>',
     nombre = 'Mi Negocio',
     links = [],
     ctaTexto = 'Reservar',
@@ -56,10 +56,10 @@ export function crearFooter({
         <div class="container">
             <p>&copy; ${año} ${nombre}. Todos los derechos reservados.</p>
             <div class="social-links">
-                ${redes.instagram ? `<a href="${redes.instagram}" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>` : ''}
-                ${redes.facebook ? `<a href="${redes.facebook}" target="_blank" aria-label="Facebook"><i class="fab fa-facebook"></i></a>` : ''}
-                ${redes.whatsapp ? `<a href="https://wa.me/${redes.whatsapp}" target="_blank" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>` : ''}
-                ${redes.tiktok ? `<a href="${redes.tiktok}" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>` : ''}
+                ${redes.instagram ? `<a href="${redes.instagram}" target="_blank" aria-label="Instagram"><i class="ph ph-instagram-logo"></i></a>` : ''}
+                ${redes.facebook ? `<a href="${redes.facebook}" target="_blank" aria-label="Facebook"><i class="ph ph-facebook-logo"></i></a>` : ''}
+                ${redes.whatsapp ? `<a href="https://wa.me/${redes.whatsapp}" target="_blank" aria-label="WhatsApp"><i class="ph ph-whatsapp-logo"></i></a>` : ''}
+                ${redes.tiktok ? `<a href="${redes.tiktok}" target="_blank" aria-label="TikTok"><i class="ph ph-tiktok-logo"></i></a>` : ''}
             </div>
         </div>
     `;
@@ -85,10 +85,10 @@ export function crearStatCard({ icono, label, valor, color = '#6C63FF' }) {
 // ── Badge de Estado ───────────────────────────
 export function crearBadgeEstado(estado) {
     const configs = {
-        confirmada: { color: '#00D4AA', texto: '✓ Confirmada' },
-        pendiente:  { color: '#FFC107', texto: '⏳ Pendiente' },
-        cancelada:  { color: '#FF6B6B', texto: '✗ Cancelada' },
-        completada: { color: '#6C63FF', texto: '★ Completada' }
+        confirmada: { color: '#6B8F71', texto: '<i class="ph ph-check-circle"></i> Confirmada' },
+        pendiente:  { color: '#C99726', texto: '<i class="ph ph-clock"></i> Pendiente' },
+        cancelada:  { color: '#C1694F', texto: '<i class="ph ph-x-circle"></i> Cancelada' },
+        completada: { color: '#D4738C', texto: '<i class="ph ph-seal-check"></i> Completada' }
     };
     const { color, texto } = configs[estado] || configs.pendiente;
     return `<span style="
@@ -173,7 +173,7 @@ export function crearSkeleton(lineas = 3) {
 }
 
 // ── Empty State ───────────────────────────────
-export function crearEmptyState({ icono = '📭', titulo = 'Sin datos', descripcion = '', accion = null }) {
+export function crearEmptyState({ icono = '<i class="ph ph-tray"></i>', titulo = 'Sin datos', descripcion = '', accion = null }) {
     return `
         <div style="
             text-align: center; padding: 60px 20px;

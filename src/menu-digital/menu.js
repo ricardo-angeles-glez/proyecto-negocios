@@ -1,3 +1,5 @@
+import { db } from '../shared/database.js';
+
 // ============================================
 // MENÚ DIGITAL - SIN IMPORTS (compatibilidad)
 // ============================================
@@ -162,6 +164,7 @@ var searchQuery = '';
 
 // ── Init ───────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+    db.registrarVisita('menu-digital');
     renderHeader();
     renderCategories();
     renderTagFilters();

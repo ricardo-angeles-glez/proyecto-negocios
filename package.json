@@ -8,15 +8,13 @@
   "type": "module",
   "scripts": {
     "dev": "npx serve . -p 3000 --no-clipboard",
-    "build": "echo 'Proyecto estático - no requiere build'",
+    "build": "node scripts/build-env.js",
     "preview": "npx serve . -p 4000",
     "lint": "npx eslint src/**/*.js",
     "format": "npx prettier --write 'src/**/*.{html,css,js,json}'",
     "tree": "node tree.js"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "serve": "^14.2.1",
     "prettier": "^3.1.0",
@@ -30,7 +28,8 @@
     "menu-digital",
     "reservas",
     "restaurante",
-    "supabase",
+    "google-sheets",
+    "apps-script",
     "vercel"
   ]
 }

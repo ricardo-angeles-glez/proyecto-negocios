@@ -1,3 +1,5 @@
+import { db } from '../shared/database.js';
+
 // ============================================
 // RESERVAS.JS - VERSIÓN FINAL
 // Con validaciones, selector de país, envío a
@@ -11,24 +13,23 @@ var CONFIG = {
     whatsapp: '5215578053787',
     restaurante: 'La Casona',
     moneda: '$',
-    diasAnticipacion: 30,
-    googleScriptURL: '' // Se configura después
+    diasAnticipacion: 30
 };
 
 // Códigos de país
 var COUNTRY_CODES = [
-    { code: '+52', flag: '🇲🇽', name: 'México', maxLen: 10 },
-    { code: '+1',  flag: '🇺🇸', name: 'Estados Unidos', maxLen: 10 },
-    { code: '+57', flag: '🇨🇴', name: 'Colombia', maxLen: 10 },
-    { code: '+54', flag: '🇦🇷', name: 'Argentina', maxLen: 10 },
-    { code: '+56', flag: '🇨🇱', name: 'Chile', maxLen: 9 },
-    { code: '+51', flag: '🇵🇪', name: 'Perú', maxLen: 9 },
-    { code: '+593',flag: '🇪🇨', name: 'Ecuador', maxLen: 9 },
-    { code: '+58', flag: '🇻🇪', name: 'Venezuela', maxLen: 10 },
-    { code: '+34', flag: '🇪🇸', name: 'España', maxLen: 9 },
-    { code: '+502',flag: '🇬🇹', name: 'Guatemala', maxLen: 8 },
-    { code: '+503',flag: '🇸🇻', name: 'El Salvador', maxLen: 8 },
-    { code: '+504',flag: '🇭🇳', name: 'Honduras', maxLen: 8 }
+    { code: '+52', name: 'México', maxLen: 10 },
+    { code: '+1',  name: 'Estados Unidos', maxLen: 10 },
+    { code: '+57', name: 'Colombia', maxLen: 10 },
+    { code: '+54', name: 'Argentina', maxLen: 10 },
+    { code: '+56', name: 'Chile', maxLen: 9 },
+    { code: '+51', name: 'Perú', maxLen: 9 },
+    { code: '+593', name: 'Ecuador', maxLen: 9 },
+    { code: '+58', name: 'Venezuela', maxLen: 10 },
+    { code: '+34', name: 'España', maxLen: 9 },
+    { code: '+502', name: 'Guatemala', maxLen: 8 },
+    { code: '+503', name: 'El Salvador', maxLen: 8 },
+    { code: '+504', name: 'Honduras', maxLen: 8 }
 ];
 
 // ============================================
@@ -48,6 +49,7 @@ var reserva = {
 var currentStep = 1;
 var currentMonth = new Date();
 var formErrors = {};
+var ultimaReservaConfirmada = null;
 
 // ============================================
 // INICIALIZACIÓN
@@ -89,7 +91,7 @@ function renderCountrySelector() {
     COUNTRY_CODES.forEach(function(c) {
         var selected = c.code === '+52' ? ' selected' : '';
         html += '<option value="' + c.code + '"' + selected + ' data-maxlen="' + c.maxLen + '">' +
-            c.flag + ' ' + c.code +
+            c.name + ' ' + c.code +
             '</option>';
     });
 
@@ -400,7 +402,7 @@ function setText(id, value) {
 // ============================================
 // CONFIRMAR RESERVA
 // ============================================
-function confirmarReserva() {
+async function confirmarReserva() {
     var btnConfirm = document.getElementById('confirmReserva');
 
     if (btnConfirm) {
@@ -425,14 +427,30 @@ function confirmarReserva() {
         createdAt: new Date().toISOString()
     };
 
-    guardarReservaLocal(reservaData);
-    enviarAGoogleSheets(reservaData);
+    var resultado;
+    try {
+        resultado = await db.crearReserva(reservaData);
+    } catch (error) {
+        console.warn('No se pudo guardar la reserva:', error);
+        guardarReservaLocal(reservaData);
+        resultado = { success: true, codigo: code, offline: true };
+    }
+
+    if (resultado && resultado.codigo) {
+        code = resultado.codigo;
+        reservaData.codigo = code;
+    }
+
+    ultimaReservaConfirmada = reservaData;
 
     // Mostrar código
     setText('reservaCode', code);
 
     // Configurar Google Calendar
     configurarCalendario(code);
+    configurarCalendarioTelefono(code);
+    configurarCorreoConfirmacion(reservaData);
+    enviarCorreoConfirmacion(reservaData);
 
     // Ir al paso 5
     goToStep(5);
@@ -479,43 +497,6 @@ function guardarReservaLocal(data) {
     }
 }
 
-function enviarAGoogleSheets(data) {
-    if (!CONFIG.googleScriptURL) {
-        console.warn('Google Script URL no configurada');
-        return;
-    }
-
-    var payload = {
-        action: 'nuevaReserva',
-        token: window.ENV ? window.ENV.SECRET_TOKEN : '',
-        nombre: data.nombre,
-        telefono: data.telefono,
-        email: data.email,
-        fecha: data.fecha,
-        hora: data.hora,
-        personas: data.personas,
-        notas: data.notas,
-        ip: 'web-client'
-    };
-
-    fetch(CONFIG.googleScriptURL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(result) {
-        if (result.status === 'success') {
-            console.log('Google Sheets: reserva guardada');
-        } else {
-            console.warn('Google Sheets error:', result.message);
-        }
-    })
-    .catch(function(err) {
-        console.warn('Google Sheets offline, guardado localmente:', err);
-    });
-}
-
 function configurarCalendario(code) {
     var btn = document.getElementById('addToCalendar');
     if (!btn || !reserva.fecha) return;
@@ -535,6 +516,89 @@ function configurarCalendario(code) {
         '&text=' + encodeURIComponent('Reserva en ' + CONFIG.restaurante) +
         '&dates=' + fmt(start) + '/' + fmt(end) +
         '&details=' + encodeURIComponent('Reserva ' + code + ' para ' + reserva.personas + ' personas');
+}
+
+function configurarCalendarioTelefono(code) {
+    var btn = document.getElementById('downloadCalendar');
+    if (!btn || !reserva.fecha) return;
+
+    var ics = crearICS(code);
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+
+    btn.href = url;
+    btn.download = 'reserva-' + code + '.ics';
+}
+
+function configurarCorreoConfirmacion(data) {
+    var btn = document.getElementById('sendEmail');
+    if (!btn) return;
+
+    var subject = 'Reserva confirmada - ' + CONFIG.restaurante;
+    var body =
+        'Hola ' + data.nombre + ',\n\n' +
+        'Tu reserva quedó confirmada.\n\n' +
+        'Código: ' + data.codigo + '\n' +
+        'Fecha: ' + data.fecha + '\n' +
+        'Hora: ' + data.hora + '\n' +
+        'Personas: ' + data.personas + '\n\n' +
+        'Te esperamos.';
+
+    btn.href = 'mailto:' + encodeURIComponent(data.email) +
+        '?subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(body);
+}
+
+function enviarCorreoConfirmacion(data) {
+    fetch('/api/send-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            negocio: CONFIG.restaurante,
+            reserva: data
+        })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(result) {
+        if (!result.success) {
+            console.info('Correo no enviado:', result.message || result.error || 'sin detalle');
+        }
+    })
+    .catch(function(error) {
+        console.info('Correo de confirmación pendiente:', error);
+    });
+}
+
+function crearICS(code) {
+    var start = new Date(reserva.fecha);
+    var parts = reserva.hora.split(':');
+    start.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+
+    var end = new Date(start);
+    end.setHours(end.getHours() + 2);
+
+    var stamp = new Date();
+    var fmt = function(d) {
+        return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+
+    var description = 'Reserva ' + code + ' para ' + reserva.personas + ' personas';
+    return [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Proyecto Negocios//Reservas//ES',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        'UID:' + code + '@proyecto-negocios',
+        'DTSTAMP:' + fmt(stamp),
+        'DTSTART:' + fmt(start),
+        'DTEND:' + fmt(end),
+        'SUMMARY:Reserva en ' + CONFIG.restaurante,
+        'DESCRIPTION:' + description,
+        'END:VEVENT',
+        'END:VCALENDAR'
+    ].join('\r\n');
 }
 
 // ============================================
@@ -569,6 +633,7 @@ function resetearFormulario() {
         nombre: '', countryCode: '+52',
         telefono: '', email: '', notas: ''
     };
+    ultimaReservaConfirmada = null;
 
     var form = document.getElementById('reservaForm');
     if (form) form.reset();

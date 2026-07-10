@@ -1,29 +1,8 @@
-// ============================================
-// ADMIN PANEL - LÓGICA PRINCIPAL
-// ============================================
+import { db } from '../shared/database.js';
 
-import { supabase } from '../shared/supabase-config.js';
-import {
-    formatearFecha,
-    formatearFechaCorta,
-    formatearHora,
-    mostrarToast,
-    mostrarLoading,
-    ocultarLoading,
-    exportarCSV,
-    crearEmptyState,
-    crearSkeleton
-} from '../shared/utils.js';
-import { crearBadgeEstado, crearModal } from '../shared/components.js';
-
-// ============================================
-// ESTADO GLOBAL DEL ADMIN
-// ============================================
 const adminState = {
     reservas: [],
-    menuItems: [],
-    categorias: [],
-    config: {},
+    contactos: [],
     filtros: {
         estado: 'all',
         fecha: '',
@@ -31,166 +10,129 @@ const adminState = {
     }
 };
 
-// ============================================
-// INICIALIZACIÓN
-// ============================================
-document.addEventListener('DOMContentLoaded', async () => {
-    initSidebar();
-    await cargarDashboard();
-    setInterval(cargarDashboard, 60000); // Refresh cada 60s
+document.addEventListener('DOMContentLoaded', () => {
+    inicializarAdmin();
 });
 
-// ============================================
-// SIDEBAR MOBILE
-// ============================================
-function initSidebar() {
-    const toggleBtn = document.getElementById('sidebarToggle');
-    const sidebar = document.querySelector('.sidebar');
+async function inicializarAdmin() {
+    pintarFechaActual();
+    initFiltros();
+    await verificarConexion();
+    await cargarDashboard();
 
-    toggleBtn?.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
+    setInterval(cargarDashboard, 60000);
+}
 
-    // Cerrar al hacer click fuera
-    document.addEventListener('click', (e) => {
-        if (!sidebar.contains(e.target) && !toggleBtn?.contains(e.target)) {
-            sidebar.classList.remove('open');
-        }
-    });
+function pintarFechaActual() {
+    const currentDate = document.getElementById('currentDate');
+    if (!currentDate) return;
 
-    // Marcar enlace activo
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.sidebar-nav a').forEach(link => {
-        const href = link.getAttribute('href').split('/').pop();
-        if (href === currentPage) {
-            link.classList.add('active');
-        }
+    currentDate.textContent = new Date().toLocaleDateString('es-MX', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
     });
 }
 
-// ============================================
-// DASHBOARD
-// ============================================
-export async function cargarDashboard() {
+async function verificarConexion() {
+    const statusEl = document.getElementById('conexion-status');
+    if (!statusEl) return;
+
     try {
-        await Promise.all([
-            cargarStatsReservas(),
-            cargarReservasRecientes(),
-            cargarConfig()
-        ]);
-    } catch (error) {
-        console.error('Error cargando dashboard:', error);
-        mostrarToast('Error al cargar datos', 'error');
+        const online = await db.verificarConexion();
+        if (!online) throw new Error('offline');
+
+        statusEl.className = 'connection-pill is-online';
+        statusEl.innerHTML = '<i class="ph ph-check-circle"></i> Google Sheets conectado';
+    } catch {
+        statusEl.className = 'connection-pill is-offline';
+        statusEl.innerHTML = '<i class="ph ph-warning-circle"></i> Modo offline';
     }
 }
 
-async function cargarStatsReservas() {
-    const hoy = new Date().toISOString().split('T')[0];
+async function cargarDashboard() {
+    await Promise.all([
+        cargarStats(),
+        cargarReservas(),
+        cargarContactos()
+    ]);
+}
 
-    const { data: todasReservas, error } = await supabase
-        .from('reservas')
-        .select('*');
+async function cargarStats() {
+    const stats = await db.obtenerStats();
 
-    if (error) {
-        console.error(error);
+    setText('stat-hoy', stats.reservasHoy || 0);
+    setText('stat-total', stats.totalReservas || 0);
+    setText('stat-personas', stats.personasHoy || 0);
+    setText('stat-visitas', stats.totalVisitas || 0);
+
+    const badge = document.getElementById('pendientes-badge');
+    if (!badge) return;
+
+    const pendientes = stats.pendientes || 0;
+    badge.textContent = pendientes;
+    badge.style.display = pendientes > 0 ? 'block' : 'none';
+}
+
+async function cargarReservas() {
+    const container = document.getElementById('reservas-table-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-state">
+            <i class="ph ph-circle-notch spin"></i>
+            <p>Cargando reservas...</p>
+        </div>
+    `;
+
+    const reservas = await db.obtenerReservas();
+    adminState.reservas = Array.isArray(reservas) ? reservas : [];
+    renderReservas();
+}
+
+async function cargarContactos() {
+    const container = document.getElementById('contactos-table-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="loading-state compact">
+            <i class="ph ph-circle-notch spin"></i>
+            <p>Cargando contactos...</p>
+        </div>
+    `;
+
+    const contactos = await db.obtenerContactos();
+    adminState.contactos = Array.isArray(contactos) ? contactos : [];
+    renderContactos();
+}
+
+function renderReservas() {
+    const container = document.getElementById('reservas-table-container');
+    const info = document.getElementById('tabla-info');
+    if (!container) return;
+
+    if (adminState.reservas.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon"><i class="ph ph-calendar-x"></i></div>
+                <h3>No hay reservas todavía</h3>
+                <p>Las reservas aparecerán aquí cuando los clientes las hagan.</p>
+            </div>
+        `;
+        if (info) info.textContent = '0 reservas';
         return;
     }
 
-    adminState.reservas = todasReservas || [];
+    const filtradas = aplicarFiltros(adminState.reservas);
+    if (info) info.textContent = `${filtradas.length} de ${adminState.reservas.length} reservas`;
 
-    const reservasHoy = todasReservas.filter(r => r.fecha === hoy);
-    const personasHoy = reservasHoy.reduce((sum, r) => sum + parseInt(r.personas || 0), 0);
-    const pendientes = todasReservas.filter(r => r.estado === 'pendiente');
-
-    // Actualizar UI
-    updateStat('stat-total', todasReservas.length);
-    updateStat('stat-hoy', reservasHoy.length);
-    updateStat('stat-personas', personasHoy);
-    updateStat('stat-pendientes', pendientes.length);
-
-    // Badge en sidebar
-    const badge = document.getElementById('pendientes-badge');
-    if (badge) {
-        badge.textContent = pendientes.length;
-        badge.style.display = pendientes.length > 0 ? 'block' : 'none';
-    }
-}
-
-function updateStat(id, valor) {
-    const el = document.getElementById(id);
-    if (el) {
-        // Animación de conteo
-        const start = parseInt(el.textContent) || 0;
-        const end = parseInt(valor);
-        const duration = 500;
-        const step = (end - start) / (duration / 16);
-        let current = start;
-
-        const timer = setInterval(() => {
-            current += step;
-            if ((step > 0 && current >= end) || (step < 0 && current <= end)) {
-                el.textContent = end;
-                clearInterval(timer);
-            } else {
-                el.textContent = Math.floor(current);
-            }
-        }, 16);
-    }
-}
-
-// ============================================
-// RESERVAS
-// ============================================
-export async function cargarReservasRecientes(limite = 10) {
-    const container = document.getElementById('reservas-table-container');
-    if (!container) return;
-
-    container.innerHTML = crearSkeleton(5);
-
-    try {
-        let query = supabase
-            .from('reservas')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        // Aplicar filtros
-        if (adminState.filtros.estado !== 'all') {
-            query = query.eq('estado', adminState.filtros.estado);
-        }
-        if (adminState.filtros.fecha) {
-            query = query.eq('fecha', adminState.filtros.fecha);
-        }
-        if (adminState.filtros.busqueda) {
-            query = query.ilike('nombre', `%${adminState.filtros.busqueda}%`);
-        }
-
-        if (limite) query = query.limit(limite);
-
-        const { data, error } = await query;
-        if (error) throw error;
-
-        adminState.reservas = data || [];
-        renderTablaReservas(data || []);
-
-    } catch (error) {
-        container.innerHTML = crearEmptyState({
-            icono: '⚠️',
-            titulo: 'Error al cargar reservas',
-            descripcion: error.message
-        });
-    }
-}
-
-function renderTablaReservas(reservas) {
-    const container = document.getElementById('reservas-table-container');
-    if (!container) return;
-
-    if (reservas.length === 0) {
-        container.innerHTML = crearEmptyState({
-            icono: '📅',
-            titulo: 'No hay reservas',
-            descripcion: 'Las reservas aparecerán aquí cuando los clientes hagan una solicitud'
-        });
+    if (filtradas.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state compact">
+                <p>No se encontraron reservas con estos filtros.</p>
+            </div>
+        `;
         return;
     }
 
@@ -208,57 +150,117 @@ function renderTablaReservas(reservas) {
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="reservas-tbody">
-                    ${reservas.map(r => renderFilaReserva(r)).join('')}
+                <tbody>
+                    ${filtradas.map(renderFilaReserva).join('')}
                 </tbody>
             </table>
         </div>
     `;
 
-    // Agregar event listeners a botones
-    reservas.forEach(r => {
-        document.getElementById(`btn-confirmar-${r.id}`)?.addEventListener('click', () => {
-            cambiarEstadoReserva(r.id, 'confirmada');
+    container.querySelectorAll('[data-action="whatsapp"]').forEach((button) => {
+        button.addEventListener('click', () => {
+            contactarWhatsApp(button.dataset.telefono, button.dataset.nombre);
         });
-        document.getElementById(`btn-cancelar-${r.id}`)?.addEventListener('click', () => {
-            confirmarCancelacion(r);
-        });
-        document.getElementById(`btn-whatsapp-${r.id}`)?.addEventListener('click', () => {
-            contactarPorWhatsApp(r);
+    });
+
+    container.querySelectorAll('[data-action="cancelar"]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            await cancelarReserva(button.dataset.codigo);
         });
     });
 }
 
-function renderFilaReserva(r) {
-    const esPasada = new Date(r.fecha) < new Date();
+function renderContactos() {
+    const container = document.getElementById('contactos-table-container');
+    const info = document.getElementById('contactos-info');
+    if (!container) return;
+
+    const contactos = adminState.contactos.slice(0, 8);
+    if (info) info.textContent = `${adminState.contactos.length} contactos`;
+
+    if (contactos.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state compact">
+                <div class="empty-icon"><i class="ph ph-envelope-simple"></i></div>
+                <h3>No hay contactos todavía</h3>
+                <p>Los mensajes del formulario aparecerán aquí.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="contact-list">
+            ${contactos.map(renderContacto).join('')}
+        </div>
+    `;
+}
+
+function renderContacto(contacto) {
+    const fecha = contacto.timestamp || contacto.createdAt || contacto.fecha || '';
     return `
-        <tr style="${esPasada ? 'opacity:0.6' : ''}">
-            <td><code style="font-size:0.8rem;color:#6C63FF">${r.codigo}</code></td>
+        <article class="contact-item">
+            <div class="contact-avatar"><i class="ph ph-user"></i></div>
+            <div class="contact-body">
+                <div class="contact-meta">
+                    <strong>${escapeHTML(contacto.nombre || contacto.Nombre || '')}</strong>
+                    <span>${formatDateTime(fecha)}</span>
+                </div>
+                <a href="mailto:${escapeAttribute(contacto.email || contacto.Email || '')}">
+                    ${escapeHTML(contacto.email || contacto.Email || '')}
+                </a>
+                <p>${escapeHTML(contacto.mensaje || contacto.Mensaje || '')}</p>
+            </div>
+        </article>
+    `;
+}
+
+function aplicarFiltros(reservas) {
+    const busqueda = adminState.filtros.busqueda.trim().toLowerCase();
+
+    return reservas.filter((reserva) => {
+        const coincideBusqueda = !busqueda ||
+            (reserva.nombre || '').toLowerCase().includes(busqueda) ||
+            (reserva.codigo || '').toLowerCase().includes(busqueda) ||
+            (reserva.telefono || '').toLowerCase().includes(busqueda);
+
+        const coincideEstado = adminState.filtros.estado === 'all' ||
+            reserva.estado === adminState.filtros.estado;
+
+        const coincideFecha = !adminState.filtros.fecha ||
+            reserva.fecha === adminState.filtros.fecha;
+
+        return coincideBusqueda && coincideEstado && coincideFecha;
+    });
+}
+
+function renderFilaReserva(reserva) {
+    return `
+        <tr>
+            <td><code>${escapeHTML(reserva.codigo || 'N/A')}</code></td>
             <td>
-                <div style="font-weight:600">${r.nombre}</div>
-                <div style="font-size:0.78rem;color:#6c757d">${r.telefono}</div>
+                <div class="table-primary">${escapeHTML(reserva.nombre || '')}</div>
+                <div class="table-secondary">${escapeHTML(reserva.telefono || '')}</div>
             </td>
-            <td>${formatearFechaCorta(r.fecha)}</td>
-            <td>${formatearHora(r.hora)}</td>
-            <td style="text-align:center">
-                <strong>${r.personas}</strong>
-            </td>
-            <td>${crearBadgeEstado(r.estado)}</td>
+            <td>${escapeHTML(reserva.fecha || '')}</td>
+            <td>${escapeHTML(reserva.hora || '')}</td>
+            <td class="td-center"><strong>${escapeHTML(String(reserva.personas || ''))}</strong></td>
+            <td>${getBadge(reserva.estado)}</td>
             <td>
-                <div style="display:flex;gap:4px;flex-wrap:wrap">
-                    ${r.estado === 'pendiente' ? `
-                        <button id="btn-confirmar-${r.id}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-check"></i>
-                        </button>
-                    ` : ''}
-                    <button id="btn-whatsapp-${r.id}" class="btn btn-sm btn-icon"
-                            style="background:rgba(37,211,102,0.1);color:#25D366">
-                        <i class="fab fa-whatsapp"></i>
+                <div class="table-actions">
+                    <button class="btn btn-icon btn-sm btn-whatsapp-action"
+                            data-action="whatsapp"
+                            data-telefono="${escapeAttribute(reserva.telefono || '')}"
+                            data-nombre="${escapeAttribute(reserva.nombre || '')}"
+                            aria-label="Contactar por WhatsApp">
+                        <i class="ph ph-whatsapp-logo"></i>
                     </button>
-                    ${r.estado !== 'cancelada' ? `
-                        <button id="btn-cancelar-${r.id}" class="btn btn-sm btn-icon"
-                                style="background:rgba(255,107,107,0.1);color:#FF6B6B">
-                            <i class="fas fa-times"></i>
+                    ${reserva.estado !== 'cancelada' ? `
+                        <button class="btn btn-icon btn-sm btn-danger-soft"
+                                data-action="cancelar"
+                                data-codigo="${escapeAttribute(reserva.codigo || '')}"
+                                aria-label="Cancelar reserva">
+                            <i class="ph ph-x"></i>
                         </button>
                     ` : ''}
                 </div>
@@ -267,256 +269,124 @@ function renderFilaReserva(r) {
     `;
 }
 
-async function cambiarEstadoReserva(id, nuevoEstado) {
-    const { error } = await supabase
-        .from('reservas')
-        .update({ estado: nuevoEstado })
-        .eq('id', id);
+function getBadge(estado = 'pendiente') {
+    const configs = {
+        confirmada: { cls: 'badge-success', icon: 'ph-check-circle', text: 'Confirmada' },
+        pendiente: { cls: 'badge-warning', icon: 'ph-clock', text: 'Pendiente' },
+        cancelada: { cls: 'badge-danger', icon: 'ph-x-circle', text: 'Cancelada' }
+    };
+    const config = configs[estado] || configs.pendiente;
 
-    if (error) {
-        mostrarToast('Error al actualizar reserva', 'error');
-        return;
-    }
-
-    mostrarToast(`Reserva ${nuevoEstado} ✓`, 'success');
-    await cargarReservasRecientes();
-    await cargarStatsReservas();
+    return `<span class="badge ${config.cls}"><i class="ph ${config.icon}"></i> ${config.text}</span>`;
 }
 
-function confirmarCancelacion(reserva) {
-    crearModal({
-        id: 'modal-cancelar',
-        titulo: '❌ Cancelar Reserva',
-        contenido: `¿Estás seguro de cancelar la reserva de <strong>${reserva.nombre}</strong> 
-                    para el ${formatearFechaCorta(reserva.fecha)} a las ${reserva.hora}?`,
-        textoConfirmar: 'Sí, cancelar',
-        onConfirm: () => cambiarEstadoReserva(reserva.id, 'cancelada')
-    });
-}
-
-function contactarPorWhatsApp(reserva) {
-    const mensaje = `Hola ${reserva.nombre}! 👋 
-
-Te contactamos desde *${adminState.config.nombre_negocio || 'Tu Negocio'}* 
-sobre tu reserva del ${formatearFechaCorta(reserva.fecha)} a las ${formatearHora(reserva.hora)}.
-
-¿En qué podemos ayudarte?`;
-
-    window.open(`https://wa.me/${reserva.telefono}?text=${encodeURIComponent(mensaje)}`, '_blank');
-}
-
-// ============================================
-// FILTROS DE RESERVAS
-// ============================================
-export function initFiltros() {
-    document.getElementById('filtro-estado')?.addEventListener('change', (e) => {
-        adminState.filtros.estado = e.target.value;
-        cargarReservasRecientes();
+function initFiltros() {
+    document.getElementById('filtro-busqueda')?.addEventListener('input', (event) => {
+        adminState.filtros.busqueda = event.target.value;
+        renderReservas();
     });
 
-    document.getElementById('filtro-fecha')?.addEventListener('change', (e) => {
-        adminState.filtros.fecha = e.target.value;
-        cargarReservasRecientes();
+    document.getElementById('filtro-estado')?.addEventListener('change', (event) => {
+        adminState.filtros.estado = event.target.value;
+        renderReservas();
     });
 
-    document.getElementById('filtro-busqueda')?.addEventListener('input', debounce((e) => {
-        adminState.filtros.busqueda = e.target.value;
-        cargarReservasRecientes();
-    }, 400));
+    document.getElementById('filtro-fecha')?.addEventListener('change', (event) => {
+        adminState.filtros.fecha = event.target.value;
+        renderReservas();
+    });
 
     document.getElementById('btn-limpiar-filtros')?.addEventListener('click', () => {
         adminState.filtros = { estado: 'all', fecha: '', busqueda: '' };
-        document.getElementById('filtro-estado').value = 'all';
-        document.getElementById('filtro-fecha').value = '';
-        document.getElementById('filtro-busqueda').value = '';
-        cargarReservasRecientes();
+        setValue('filtro-busqueda', '');
+        setValue('filtro-estado', 'all');
+        setValue('filtro-fecha', '');
+        renderReservas();
     });
 
-    document.getElementById('btn-exportar')?.addEventListener('click', () => {
-        exportarCSV(adminState.reservas.map(r => ({
-            Código: r.codigo,
-            Nombre: r.nombre,
-            Teléfono: r.telefono,
-            Email: r.email || '',
-            Fecha: formatearFechaCorta(r.fecha),
-            Hora: r.hora,
-            Personas: r.personas,
-            Notas: r.notas || '',
-            Estado: r.estado,
-            Creada: new Date(r.created_at).toLocaleString('es-ES')
-        })), 'reservas');
-        mostrarToast('Exportando CSV...', 'info');
-    });
+    document.getElementById('btn-exportar')?.addEventListener('click', exportarReservas);
 }
 
-function debounce(fn, delay) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
-    };
+async function cancelarReserva(codigo) {
+    if (!codigo || !confirm(`¿Cancelar reserva ${codigo}?`)) return;
+
+    await db.actualizarEstadoReserva(codigo, 'cancelada');
+    await cargarDashboard();
 }
 
-// ============================================
-// CONFIGURACIÓN
-// ============================================
-async function cargarConfig() {
-    const { data, error } = await supabase
-        .from('configuracion')
-        .select('*');
-
-    if (error) return;
-
-    adminState.config = {};
-    data?.forEach(item => {
-        adminState.config[item.clave] = item.valor;
-    });
+function contactarWhatsApp(telefono, nombre) {
+    const msg = `Hola ${nombre}. Te contactamos sobre tu reserva. ¿En qué podemos ayudarte?`;
+    window.open(`https://wa.me/${telefono}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-export async function guardarConfig(clave, valor) {
-    const { error } = await supabase
-        .from('configuracion')
-        .upsert({ clave, valor }, { onConflict: 'clave' });
-
-    if (error) {
-        mostrarToast('Error al guardar', 'error');
-        return false;
-    }
-
-    adminState.config[clave] = valor;
-    mostrarToast('Configuración guardada ✓', 'success');
-    return true;
-}
-
-// ============================================
-// MENÚ ADMIN
-// ============================================
-export async function cargarMenuAdmin() {
-    const { data: items, error } = await supabase
-        .from('menu_items')
-        .select('*, menu_categorias(nombre, emoji)')
-        .order('orden');
-
-    if (error) {
-        mostrarToast('Error al cargar menú', 'error');
+function exportarReservas() {
+    const reservas = aplicarFiltros(adminState.reservas);
+    if (!reservas.length) {
+        alert('No hay datos para exportar');
         return;
     }
 
-    adminState.menuItems = items || [];
-    renderMenuAdmin(items || []);
+    const csv = [
+        'Codigo,Nombre,Telefono,Email,Fecha,Hora,Personas,Notas,Estado',
+        ...reservas.map((reserva) => [
+            reserva.codigo,
+            reserva.nombre,
+            reserva.telefono,
+            reserva.email || '',
+            reserva.fecha,
+            reserva.hora,
+            reserva.personas,
+            reserva.notas || '',
+            reserva.estado
+        ].map(csvValue).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reservas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
-function renderMenuAdmin(items) {
-    const container = document.getElementById('menu-admin-container');
-    if (!container) return;
-
-    if (items.length === 0) {
-        container.innerHTML = crearEmptyState({
-            icono: '🍽️',
-            titulo: 'Menú vacío',
-            descripcion: 'Agrega tu primer plato al menú'
-        });
-        return;
-    }
-
-    container.innerHTML = `
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Plato</th>
-                        <th>Categoría</th>
-                        <th>Precio</th>
-                        <th>Disponible</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${items.map(item => `
-                        <tr>
-                            <td>
-                                <img src="${item.imagen || 'https://via.placeholder.com/50'}"
-                                     style="width:48px;height:48px;border-radius:8px;object-fit:cover"
-                                     alt="${item.nombre}">
-                            </td>
-                            <td>
-                                <div style="font-weight:600">${item.nombre}</div>
-                                <div style="font-size:0.78rem;color:#6c757d;max-width:200px;
-                                     overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                                    ${item.descripcion || ''}
-                                </div>
-                            </td>
-                            <td>
-                                ${item.menu_categorias?.emoji || ''} 
-                                ${item.menu_categorias?.nombre || 'Sin categoría'}
-                            </td>
-                            <td><strong>$${parseFloat(item.precio).toFixed(2)}</strong></td>
-                            <td>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" ${item.disponible ? 'checked' : ''}
-                                           onchange="toggleDisponibilidad(${item.id}, this.checked)">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </td>
-                            <td>
-                                <div style="display:flex;gap:4px">
-                                    <button class="btn btn-sm btn-icon" onclick="editarItem(${item.id})">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-icon"
-                                            style="background:rgba(255,107,107,0.1);color:#FF6B6B"
-                                            onclick="eliminarItem(${item.id}, '${item.nombre}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
+function csvValue(value = '') {
+    const text = String(value).replace(/"/g, '""');
+    return /[",\n]/.test(text) ? `"${text}"` : text;
 }
 
-export async function toggleDisponibilidad(id, disponible) {
-    const { error } = await supabase
-        .from('menu_items')
-        .update({ disponible })
-        .eq('id', id);
+function formatDateTime(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
 
-    if (error) {
-        mostrarToast('Error al actualizar', 'error');
-        return;
-    }
-    mostrarToast(`Item ${disponible ? 'activado' : 'desactivado'} ✓`, 'success');
-}
-
-export async function eliminarItem(id, nombre) {
-    crearModal({
-        id: 'modal-eliminar',
-        titulo: '🗑️ Eliminar Item',
-        contenido: `¿Eliminar <strong>${nombre}</strong> del menú? Esta acción no se puede deshacer.`,
-        textoConfirmar: 'Eliminar',
-        onConfirm: async () => {
-            const { error } = await supabase.from('menu_items').delete().eq('id', id);
-            if (error) {
-                mostrarToast('Error al eliminar', 'error');
-                return;
-            }
-            mostrarToast('Item eliminado ✓', 'success');
-            cargarMenuAdmin();
-        }
+    return date.toLocaleString('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }
 
-// Exponer funciones globalmente para los onclick del HTML
-window.toggleDisponibilidad = toggleDisponibilidad;
-window.eliminarItem = eliminarItem;
-window.editarItem = (id) => {
-    const item = adminState.menuItems.find(i => i.id === id);
-    if (item) {
-        // Aquí puedes abrir un modal de edición
-        console.log('Editar:', item);
-    }
-};
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function setValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+}
+
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+    return escapeHTML(value).replace(/`/g, '&#096;');
+}

@@ -1,8 +1,8 @@
-// Este archivo lo genera Vercel con las variables
-// NO contiene secretos reales, solo configuración pública
+// Este archivo lo genera Vercel durante el build.
+// En desarrollo local, database.js usa valores fallback si estas variables están vacías.
 window.ENV = {
-    GOOGLE_SCRIPT_URL: '%%GOOGLE_SCRIPT_URL%%',
-    WHATSAPP: '%%WHATSAPP%%',
-    NOMBRE_NEGOCIO: '%%NOMBRE_NEGOCIO%%',
-    SECRET_TOKEN: '%%SECRET_TOKEN%%'
+    GOOGLE_SCRIPT_URL: '',
+    WHATSAPP: '',
+    NOMBRE_NEGOCIO: '',
+    SECRET_TOKEN: ''
 };

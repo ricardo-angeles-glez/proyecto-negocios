@@ -6,9 +6,17 @@
 // 2. localStorage (respaldo offline)
 // ============================================
 
-// 🔑 PEGAR AQUÍ TU URL DE GOOGLE APPS SCRIPT
-const GOOGLE_SCRIPT_URL =
+// Pegar aqui tu URL de Google Apps Script o definir GOOGLE_SCRIPT_URL en public/env.js
+const DEFAULT_GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbyev686okgRpuIf4nRC1lpvqDNFK-It7imerTJZFn34xvmQ-vHOdmhRwPYyEBzRga-z/exec";
+
+function getRuntimeEnv(name, fallback = "") {
+  const value = window.ENV?.[name];
+  if (!value || value.startsWith("%%")) return fallback;
+  return value;
+}
+
+const GOOGLE_SCRIPT_URL = getRuntimeEnv("GOOGLE_SCRIPT_URL", DEFAULT_GOOGLE_SCRIPT_URL);
 
 // ============================================
 // CLASE PRINCIPAL DE BASE DE DATOS
@@ -16,7 +24,7 @@ const GOOGLE_SCRIPT_URL =
 class Database {
   constructor() {
     this.googleURL = GOOGLE_SCRIPT_URL;
-    this.token = window.ENV?.SECRET_TOKEN ?? "abc123xyz789"; // Token de seguridad para validar peticiones
+    this.token = getRuntimeEnv("SECRET_TOKEN", "abc123xyz789");
     this.isOnline = navigator.onLine;
     this.pendingSync = [];
 
@@ -36,16 +44,16 @@ class Database {
 
   async crearReserva(datos) {
     // Generar código único
-    const codigo = "RES-" + Date.now().toString(36).toUpperCase().slice(-6);
+    const codigo = datos.codigo || "RES-" + Date.now().toString(36).toUpperCase().slice(-6);
     const reserva = {
       ...datos,
       codigo,
-      estado: "confirmada",
-      timestamp: new Date().toISOString(),
+      estado: datos.estado || "confirmada",
+      timestamp: datos.timestamp || new Date().toISOString(),
     };
 
     // 1. Guardar en localStorage siempre (respaldo)
-    this.guardarLocal("reservas", reserva);
+    this.guardarLocal("reservas", reserva, "codigo");
 
     // 2. Intentar guardar en Google Sheets
     try {
@@ -55,11 +63,11 @@ class Database {
       });
 
       if (response.status === "success") {
-        console.log("✅ Reserva guardada en Google Sheets");
+        console.log("Reserva guardada en Google Sheets");
         return { success: true, codigo: response.codigo || codigo };
       }
     } catch (error) {
-      console.warn("⚠️ Sin conexión a Google Sheets, guardado localmente");
+      console.warn("Sin conexión a Google Sheets, guardado localmente");
       this.agregarPendiente("nuevaReserva", reserva);
     }
 
@@ -78,24 +86,22 @@ class Database {
 
       if (response.status === "success") {
         // Actualizar cache local
-        localStorage.setItem(
-          "reservas_cache",
-          JSON.stringify(response.reservas),
-        );
-        localStorage.setItem("reservas_cache_time", Date.now().toString());
-        return response.reservas;
+        const reservas = this.normalizarReservas(response.reservas || []);
+        this.guardarCache("reservas_cache", reservas);
+        return reservas;
       }
     } catch (error) {
-      console.warn("⚠️ Usando datos locales");
+      console.warn("Usando datos locales");
     }
 
     // 2. Fallback: localStorage
-    return this.obtenerLocal("reservas");
+    return this.obtenerCache("reservas_cache", this.obtenerLocal("reservas"));
   }
 
   async actualizarEstadoReserva(codigo, estado) {
     // 1. Actualizar localmente
     this.actualizarLocal("reservas", "codigo", codigo, { estado });
+    this.actualizarCache("reservas_cache", "codigo", codigo, { estado });
 
     // 2. Intentar actualizar en Google Sheets
     try {
@@ -121,14 +127,14 @@ class Database {
       timestamp: new Date().toISOString(),
     };
 
-    this.guardarLocal("contactos", contacto);
+    this.guardarLocal("contactos", contacto, "timestamp");
 
     try {
       await this.postGoogle({
         action: "nuevoContacto",
         ...contacto,
       });
-      console.log("✅ Contacto guardado en Google Sheets");
+      console.log("Contacto guardado en Google Sheets");
     } catch (error) {
       this.agregarPendiente("nuevoContacto", contacto);
     }
@@ -140,10 +146,14 @@ class Database {
     try {
       const params = new URLSearchParams({ action: "getContactos" });
       const response = await this.getGoogle(params);
-      if (response.status === "success") return response.contactos;
+      if (response.status === "success") {
+        const contactos = response.contactos || [];
+        this.guardarCache("contactos_cache", contactos);
+        return contactos;
+      }
     } catch (error) {}
 
-    return this.obtenerLocal("contactos");
+    return this.obtenerCache("contactos_cache", this.obtenerLocal("contactos"));
   }
 
   // ============================================
@@ -192,11 +202,11 @@ class Database {
 
     // Enviar a Google Sheets (no bloquear)
     try {
-      this.postGoogle({
+      void this.postGoogle({
         action: "registrarVisita",
         pagina,
         userAgent: navigator.userAgent,
-      });
+      }).catch(() => {});
     } catch (e) {}
   }
 
@@ -233,7 +243,7 @@ class Database {
       const response = await fetch(this.googleURL, {
         method: "POST",
         headers: { "Content-Type": "text/plain" },
-        // ✅ Incluir token en CADA petición
+        // Incluir token en cada petición
         body: JSON.stringify({ ...data, token: this.token }),
         signal: controller.signal,
       });
@@ -249,10 +259,19 @@ class Database {
   // LOCALSTORAGE (RESPALDO)
   // ============================================
 
-  guardarLocal(coleccion, item) {
+  guardarLocal(coleccion, item, campoUnico = null) {
     try {
       const datos = JSON.parse(localStorage.getItem(coleccion) || "[]");
-      datos.push(item);
+      if (campoUnico && item[campoUnico]) {
+        const index = datos.findIndex((actual) => actual[campoUnico] === item[campoUnico]);
+        if (index !== -1) {
+          datos[index] = { ...datos[index], ...item };
+        } else {
+          datos.push(item);
+        }
+      } else {
+        datos.push(item);
+      }
       localStorage.setItem(coleccion, JSON.stringify(datos));
     } catch (e) {
       console.error("Error guardando localmente:", e);
@@ -280,6 +299,46 @@ class Database {
     }
   }
 
+  guardarCache(clave, datos) {
+    localStorage.setItem(clave, JSON.stringify(datos));
+    localStorage.setItem(`${clave}_time`, Date.now().toString());
+  }
+
+  obtenerCache(clave, fallback = []) {
+    try {
+      const cache = JSON.parse(localStorage.getItem(clave) || "[]");
+      return cache.length ? cache : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  actualizarCache(clave, campoId, valorId, cambios) {
+    try {
+      const datos = JSON.parse(localStorage.getItem(clave) || "[]");
+      const index = datos.findIndex((item) => item[campoId] === valorId);
+      if (index !== -1) {
+        datos[index] = { ...datos[index], ...cambios };
+        localStorage.setItem(clave, JSON.stringify(datos));
+      }
+    } catch (e) {}
+  }
+
+  normalizarReservas(reservas) {
+    return reservas.map((reserva) => ({
+      ...reserva,
+      codigo: reserva.codigo || reserva.Codigo || reserva.Código || "",
+      nombre: reserva.nombre || reserva.Nombre || "",
+      telefono: reserva.telefono || reserva.Telefono || reserva.Teléfono || "",
+      email: reserva.email || reserva.Email || "",
+      fecha: reserva.fecha || reserva.Fecha || "",
+      hora: reserva.hora || reserva.Hora || "",
+      personas: reserva.personas || reserva.Personas || "",
+      notas: reserva.notas || reserva.Notas || "",
+      estado: reserva.estado || reserva.Estado || "pendiente",
+    }));
+  }
+
   eliminarLocal(coleccion, campoId, valorId) {
     try {
       const datos = JSON.parse(localStorage.getItem(coleccion) || "[]");
@@ -295,7 +354,7 @@ class Database {
   agregarPendiente(action, data) {
     this.pendingSync.push({ action, data, timestamp: Date.now() });
     localStorage.setItem("pending_sync", JSON.stringify(this.pendingSync));
-    console.log(`📦 Pendiente de sync: ${action}`);
+    console.log(`Pendiente de sync: ${action}`);
   }
 
   async syncPendientes() {
@@ -303,7 +362,7 @@ class Database {
     if (pendientes.length === 0) return;
 
     console.log(
-      `🔄 Sincronizando ${pendientes.length} operaciones pendientes...`,
+      `Sincronizando ${pendientes.length} operaciones pendientes...`,
     );
 
     const fallidos = [];
@@ -314,10 +373,10 @@ class Database {
           action: item.action,
           ...item.data,
         });
-        console.log(`✅ Sincronizado: ${item.action}`);
+        console.log(`Sincronizado: ${item.action}`);
       } catch (error) {
         fallidos.push(item);
-        console.warn(`❌ Fallo al sincronizar: ${item.action}`);
+        console.warn(`Fallo al sincronizar: ${item.action}`);
       }
     }
 
@@ -325,7 +384,7 @@ class Database {
     this.pendingSync = fallidos;
 
     if (fallidos.length === 0) {
-      console.log("🎉 Todo sincronizado correctamente");
+      console.log("Todo sincronizado correctamente");
     }
   }
 

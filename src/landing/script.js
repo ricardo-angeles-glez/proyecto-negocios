@@ -1,3 +1,5 @@
+import { db } from '../shared/database.js';
+
 // ============================================
 // LANDING PAGE - SCRIPT
 // ============================================
@@ -78,25 +80,32 @@ document.querySelectorAll(
 // ── Contact form ───────────────────────────
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const formData = new FormData(e.target);
         const data = Object.fromEntries(formData);
-
-        const mensaje = `Hola, soy ${data.nombre}. ${data.mensaje}. Mi email: ${data.email}`;
-        const whatsappURL = `https://wa.me/1234567890?text=${encodeURIComponent(mensaje)}`;
-
-        window.open(whatsappURL, '_blank');
-
         const btn = e.target.querySelector('button[type="submit"]');
+        const originalHTML = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-circle-notch"></i> Enviando';
+
+        await db.crearContacto({
+            nombre: data.nombre,
+            email: data.email,
+            mensaje: data.mensaje,
+            origen: 'landing'
+        });
+
         btn.innerHTML = '<i class="ph ph-check"></i> Enviado';
         btn.style.background = 'var(--olive)';
+        e.target.reset();
 
         setTimeout(() => {
-            btn.innerHTML = '<i class="ph ph-paper-plane-tilt"></i> Enviar mensaje';
+            btn.innerHTML = originalHTML;
             btn.style.background = '';
-            e.target.reset();
+            btn.disabled = false;
         }, 3000);
     });
 }

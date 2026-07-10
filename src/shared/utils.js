@@ -43,17 +43,17 @@ export function abrirWhatsApp(numero, mensaje) {
 }
 
 export function crearMensajeReserva(reserva, nombreNegocio) {
-    return `🍽️ *RESERVA CONFIRMADA - ${nombreNegocio}*
+    return `*RESERVA CONFIRMADA - ${nombreNegocio}*
 
-📋 Código: *${reserva.codigo}*
-👤 Nombre: ${reserva.nombre}
-📞 Teléfono: ${reserva.telefono}
-📅 Fecha: ${formatearFecha(reserva.fecha)}
-⏰ Hora: ${formatearHora(reserva.hora)}
-👥 Personas: ${reserva.personas}
-${reserva.notas ? `📝 Notas: ${reserva.notas}` : ''}
+Codigo: *${reserva.codigo}*
+Nombre: ${reserva.nombre}
+Telefono: ${reserva.telefono}
+Fecha: ${formatearFecha(reserva.fecha)}
+Hora: ${formatearHora(reserva.hora)}
+Personas: ${reserva.personas}
+${reserva.notas ? `Notas: ${reserva.notas}` : ''}
 
-_Gracias por elegirnos. ¡Te esperamos!_ ✨`;
+_Gracias por elegirnos. Te esperamos._`;
 }
 
 // ── Validaciones ─────────────────────────────
@@ -101,10 +101,10 @@ export function mostrarToast(mensaje, tipo = 'info', duracion = 3000) {
     }
 
     const colores = {
-        success: { bg: '#00D4AA', icon: '✅' },
-        error:   { bg: '#FF6B6B', icon: '❌' },
-        info:    { bg: '#6C63FF', icon: 'ℹ️' },
-        warning: { bg: '#FFC107', icon: '⚠️' }
+        success: { bg: '#6B8F71', icon: '' },
+        error:   { bg: '#C1694F', icon: '' },
+        info:    { bg: '#D4738C', icon: '' },
+        warning: { bg: '#C99726', icon: '' }
     };
 
     const { bg, icon } = colores[tipo] || colores.info;
@@ -122,7 +122,7 @@ export function mostrarToast(mensaje, tipo = 'info', duracion = 3000) {
         animation: slideUp 0.3s ease;
         white-space: nowrap;
     `;
-    toast.textContent = `${icon} ${mensaje}`;
+    toast.textContent = icon ? `${icon} ${mensaje}` : mensaje;
 
     // Agregar animación CSS
     if (!document.getElementById('toast-styles')) {
