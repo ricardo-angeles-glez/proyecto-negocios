@@ -1,256 +1,363 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reservar Mesa - La Casona</title>
-    <link rel="stylesheet" href="reservas.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="reservas.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-</head>
-<body>
-<div class="reservas-app">
-
-    <!-- HEADER -->
-    <header class="reservas-header">
+  </head>
+  <body>
+    <div class="reservas-app">
+      <!-- HEADER -->
+      <header class="reservas-header">
         <a href="../landing/" class="back-btn">
-            <i class="ph ph-arrow-left"></i>
+          <i class="ph ph-arrow-left"></i>
         </a>
         <div class="header-content">
-            <h1>Reservar Mesa</h1>
-            <p>Selecciona fecha, hora y personas</p>
+          <h1>Reservar Mesa</h1>
+          <p>Selecciona fecha, hora y personas</p>
         </div>
-    </header>
+      </header>
 
-    <!-- STEPPER -->
-    <div class="stepper">
+      <!-- STEPPER -->
+      <div class="stepper">
         <div class="step active" data-step="1">
-            <span class="step-number">1</span>
-            <span class="step-label">Fecha</span>
+          <span class="step-number">1</span>
+          <span class="step-label">Fecha</span>
         </div>
         <div class="step-line"></div>
         <div class="step" data-step="2">
-            <span class="step-number">2</span>
-            <span class="step-label">Hora</span>
+          <span class="step-number">2</span>
+          <span class="step-label">Hora</span>
         </div>
         <div class="step-line"></div>
         <div class="step" data-step="3">
-            <span class="step-number">3</span>
-            <span class="step-label">Datos</span>
+          <span class="step-number">3</span>
+          <span class="step-label">Datos</span>
         </div>
         <div class="step-line"></div>
         <div class="step" data-step="4">
-            <span class="step-number">4</span>
-            <span class="step-label">Confirmar</span>
+          <span class="step-number">4</span>
+          <span class="step-label">Confirmar</span>
         </div>
-    </div>
+      </div>
 
-    <main class="reservas-content">
-
+      <main class="reservas-content">
         <!-- PASO 1 -->
         <div class="step-content active" id="step1">
-            <h2>Fecha y personas</h2>
+          <h2>Fecha y personas</h2>
 
-            <div class="form-group">
-                <label><i class="ph ph-users"></i> Personas</label>
-                <div class="personas-selector">
-                    <button class="persona-btn" type="button" data-personas="1">1</button>
-                    <button class="persona-btn active" type="button" data-personas="2">2</button>
-                    <button class="persona-btn" type="button" data-personas="3">3</button>
-                    <button class="persona-btn" type="button" data-personas="4">4</button>
-                    <button class="persona-btn" type="button" data-personas="5">5</button>
-                    <button class="persona-btn" type="button" data-personas="6">6+</button>
-                </div>
+          <div class="form-group">
+            <label><i class="ph ph-users"></i> Personas</label>
+            <div class="personas-selector">
+              <button class="persona-btn" type="button" data-personas="1">
+                1
+              </button>
+              <button
+                class="persona-btn active"
+                type="button"
+                data-personas="2"
+              >
+                2
+              </button>
+              <button class="persona-btn" type="button" data-personas="3">
+                3
+              </button>
+              <button class="persona-btn" type="button" data-personas="4">
+                4
+              </button>
+              <button class="persona-btn" type="button" data-personas="5">
+                5
+              </button>
+              <button class="persona-btn" type="button" data-personas="6">
+                6+
+              </button>
             </div>
+          </div>
 
-            <div class="form-group">
-                <label><i class="ph ph-calendar"></i> Fecha</label>
-                <div class="calendar" id="calendar">
-                    <div class="calendar-header">
-                        <button type="button" id="prevMonth"><i class="ph ph-caret-left"></i></button>
-                        <span id="currentMonth"></span>
-                        <button type="button" id="nextMonth"><i class="ph ph-caret-right"></i></button>
-                    </div>
-                    <div class="calendar-weekdays">
-                        <span>Do</span><span>Lu</span><span>Ma</span>
-                        <span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span>
-                    </div>
-                    <div class="calendar-days" id="calendarDays"></div>
-                </div>
+          <div class="form-group">
+            <label><i class="ph ph-calendar"></i> Fecha</label>
+            <div class="calendar" id="calendar">
+              <div class="calendar-header">
+                <button type="button" id="prevMonth">
+                  <i class="ph ph-caret-left"></i>
+                </button>
+                <span id="currentMonth"></span>
+                <button type="button" id="nextMonth">
+                  <i class="ph ph-caret-right"></i>
+                </button>
+              </div>
+              <div class="calendar-weekdays">
+                <span>Do</span><span>Lu</span><span>Ma</span> <span>Mi</span
+                ><span>Ju</span><span>Vi</span><span>Sa</span>
+              </div>
+              <div class="calendar-days" id="calendarDays"></div>
             </div>
+          </div>
 
-            <button class="btn btn-primary btn-full" id="toStep2" type="button" disabled>
-                Continuar <i class="ph ph-arrow-right"></i>
-            </button>
+          <button
+            class="btn btn-primary btn-full"
+            id="toStep2"
+            type="button"
+            disabled
+          >
+            Continuar <i class="ph ph-arrow-right"></i>
+          </button>
         </div>
 
         <!-- PASO 2 -->
         <div class="step-content" id="step2">
-            <h2>Selecciona horario</h2>
-            <p class="step-info" id="selectedDateInfo"></p>
+          <h2>Selecciona horario</h2>
+          <p class="step-info" id="selectedDateInfo"></p>
 
-            <div class="form-group">
-                <label><i class="ph ph-sun"></i> Almuerzo</label>
-                <div class="time-grid">
-                    <button class="time-btn" type="button" data-time="12:00">12:00</button>
-                    <button class="time-btn" type="button" data-time="12:30">12:30</button>
-                    <button class="time-btn" type="button" data-time="13:00">13:00</button>
-                    <button class="time-btn" type="button" data-time="13:30">13:30</button>
-                    <button class="time-btn" type="button" data-time="14:00">14:00</button>
-                    <button class="time-btn" type="button" data-time="14:30">14:30</button>
-                </div>
+          <div class="form-group">
+            <label><i class="ph ph-sun"></i> Almuerzo</label>
+            <div class="time-grid">
+              <button class="time-btn" type="button" data-time="12:00">
+                12:00
+              </button>
+              <button class="time-btn" type="button" data-time="12:30">
+                12:30
+              </button>
+              <button class="time-btn" type="button" data-time="13:00">
+                13:00
+              </button>
+              <button class="time-btn" type="button" data-time="13:30">
+                13:30
+              </button>
+              <button class="time-btn" type="button" data-time="14:00">
+                14:00
+              </button>
+              <button class="time-btn" type="button" data-time="14:30">
+                14:30
+              </button>
             </div>
+          </div>
 
-            <div class="form-group">
-                <label><i class="ph ph-moon"></i> Cena</label>
-                <div class="time-grid">
-                    <button class="time-btn" type="button" data-time="19:00">19:00</button>
-                    <button class="time-btn" type="button" data-time="19:30">19:30</button>
-                    <button class="time-btn" type="button" data-time="20:00">20:00</button>
-                    <button class="time-btn" type="button" data-time="20:30">20:30</button>
-                    <button class="time-btn" type="button" data-time="21:00">21:00</button>
-                    <button class="time-btn" type="button" data-time="21:30">21:30</button>
-                </div>
+          <div class="form-group">
+            <label><i class="ph ph-moon"></i> Cena</label>
+            <div class="time-grid">
+              <button class="time-btn" type="button" data-time="19:00">
+                19:00
+              </button>
+              <button class="time-btn" type="button" data-time="19:30">
+                19:30
+              </button>
+              <button class="time-btn" type="button" data-time="20:00">
+                20:00
+              </button>
+              <button class="time-btn" type="button" data-time="20:30">
+                20:30
+              </button>
+              <button class="time-btn" type="button" data-time="21:00">
+                21:00
+              </button>
+              <button class="time-btn" type="button" data-time="21:30">
+                21:30
+              </button>
             </div>
+          </div>
 
-            <div class="step-buttons">
-                <button class="btn btn-outline" type="button" id="backToStep1">
-                    <i class="ph ph-arrow-left"></i> Atrás
-                </button>
-                <button class="btn btn-primary" type="button" id="toStep3" disabled>
-                    Continuar <i class="ph ph-arrow-right"></i>
-                </button>
-            </div>
+          <div class="step-buttons">
+            <button class="btn btn-outline" type="button" id="backToStep1">
+              <i class="ph ph-arrow-left"></i> Atrás
+            </button>
+            <button class="btn btn-primary" type="button" id="toStep3" disabled>
+              Continuar <i class="ph ph-arrow-right"></i>
+            </button>
+          </div>
         </div>
 
         <!-- PASO 3 -->
         <div class="step-content" id="step3">
-            <h2>Tus datos</h2>
-            <p class="step-info" id="selectedTimeInfo"></p>
+          <h2>Tus datos</h2>
+          <p class="step-info" id="selectedTimeInfo"></p>
 
-            <form id="reservaForm" onsubmit="return false">
-                <div class="form-group">
-                    <label for="nombre">Nombre completo</label>
-                    <input type="text" id="nombre" required placeholder="Tu nombre completo">
-                </div>
-                <div class="form-group">
-                    <label for="telefono">Teléfono</label>
-                    <input type="tel" id="telefono" required placeholder="+52 55 1234 5678">
-                </div>
-                <div class="form-group">
-                    <label for="email">Email (opcional)</label>
-                    <input type="email" id="email" placeholder="tu@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="notas">Notas (opcional)</label>
-                    <textarea id="notas" rows="3"
-                        placeholder="Alergias, celebraciones, preferencia de mesa..."></textarea>
-                </div>
-            </form>
-
-            <div class="step-buttons">
-                <button class="btn btn-outline" type="button" id="backToStep2">
-                    <i class="ph ph-arrow-left"></i> Atrás
-                </button>
-                <button class="btn btn-primary" type="button" id="toStep4">
-                    Revisar <i class="ph ph-arrow-right"></i>
-                </button>
+          <form id="reservaForm" onsubmit="return false;" novalidate>
+            <div class="form-group">
+              <label for="nombre">Nombre completo</label>
+              <input
+                type="text"
+                id="nombre"
+                required
+                placeholder="Tu nombre completo"
+                autocomplete="name"
+                minlength="3"
+                maxlength="100"
+              />
+              <span class="field-error" id="nombreError"></span>
             </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <div id="phoneContainer">
+                <!-- Se genera dinámicamente -->
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                required
+                placeholder="tu@correo.com"
+                autocomplete="email"
+              />
+              <span class="field-hint"
+                >Recibirás la confirmación a este correo</span
+              >
+              <span class="field-error" id="emailError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="notas">Notas especiales (opcional)</label>
+              <textarea
+                id="notas"
+                rows="3"
+                placeholder="Alergias, celebraciones, preferencia de mesa..."
+                maxlength="500"
+              ></textarea>
+            </div>
+          </form>
+
+          <div class="step-buttons">
+            <button class="btn btn-outline" type="button" id="backToStep2">
+              <i class="ph ph-arrow-left"></i> Atrás
+            </button>
+            <button class="btn btn-primary" type="button" id="toStep4">
+              Revisar <i class="ph ph-arrow-right"></i>
+            </button>
+          </div>
         </div>
 
         <!-- PASO 4 -->
         <div class="step-content" id="step4">
-            <h2>Confirma tu reserva</h2>
+          <h2>Confirma tu reserva</h2>
 
-            <div class="reserva-summary">
-                <div class="summary-item">
-                    <i class="ph ph-calendar"></i>
-                    <div>
-                        <span class="summary-label">Fecha</span>
-                        <span class="summary-value" id="summaryDate">-</span>
-                    </div>
-                </div>
-                <div class="summary-item">
-                    <i class="ph ph-clock"></i>
-                    <div>
-                        <span class="summary-label">Hora</span>
-                        <span class="summary-value" id="summaryTime">-</span>
-                    </div>
-                </div>
-                <div class="summary-item">
-                    <i class="ph ph-users"></i>
-                    <div>
-                        <span class="summary-label">Personas</span>
-                        <span class="summary-value" id="summaryPersonas">-</span>
-                    </div>
-                </div>
-                <div class="summary-item">
-                    <i class="ph ph-user"></i>
-                    <div>
-                        <span class="summary-label">Nombre</span>
-                        <span class="summary-value" id="summaryNombre">-</span>
-                    </div>
-                </div>
-                <div class="summary-item">
-                    <i class="ph ph-phone"></i>
-                    <div>
-                        <span class="summary-label">Teléfono</span>
-                        <span class="summary-value" id="summaryTelefono">-</span>
-                    </div>
-                </div>
-                <div class="summary-item" id="summaryNotasContainer" style="display:none">
-                    <i class="ph ph-note"></i>
-                    <div>
-                        <span class="summary-label">Notas</span>
-                        <span class="summary-value" id="summaryNotas">-</span>
-                    </div>
-                </div>
+          <div class="reserva-summary">
+            <div class="summary-item">
+              <i class="ph ph-calendar"></i>
+              <div>
+                <span class="summary-label">Fecha</span>
+                <span class="summary-value" id="summaryDate">-</span>
+              </div>
             </div>
+            <div class="summary-item">
+              <i class="ph ph-clock"></i>
+              <div>
+                <span class="summary-label">Hora</span>
+                <span class="summary-value" id="summaryTime">-</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="ph ph-users"></i>
+              <div>
+                <span class="summary-label">Personas</span>
+                <span class="summary-value" id="summaryPersonas">-</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="ph ph-user"></i>
+              <div>
+                <span class="summary-label">Nombre</span>
+                <span class="summary-value" id="summaryNombre">-</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="ph ph-phone"></i>
+              <div>
+                <span class="summary-label">Teléfono</span>
+                <span class="summary-value" id="summaryTelefono">-</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="ph ph-envelope-simple"></i>
+              <div>
+                <span class="summary-label">Email</span>
+                <span class="summary-value" id="summaryEmail">-</span>
+              </div>
+            </div>
+            <div
+              class="summary-item"
+              id="summaryNotasContainer"
+              style="display: none"
+            >
+              <i class="ph ph-note"></i>
+              <div>
+                <span class="summary-label">Notas</span>
+                <span class="summary-value" id="summaryNotas">-</span>
+              </div>
+            </div>
+          </div>
 
-            <div class="step-buttons">
-                <button class="btn btn-outline" type="button" id="backToStep3">
-                    <i class="ph ph-arrow-left"></i> Atrás
-                </button>
-                <button class="btn btn-primary" type="button" id="confirmReserva">
-                    <i class="ph ph-check"></i> Confirmar
-                </button>
-            </div>
+          <div class="step-buttons">
+            <button class="btn btn-outline" type="button" id="backToStep3">
+              <i class="ph ph-arrow-left"></i> Atrás
+            </button>
+            <button class="btn btn-primary" type="button" id="confirmReserva">
+              <i class="ph ph-check"></i> Confirmar
+            </button>
+          </div>
         </div>
 
         <!-- PASO 5: ÉXITO -->
         <div class="step-content" id="step5">
-            <div class="success-container">
-                <div class="success-icon">
-                    <i class="ph ph-check-fat"></i>
-                </div>
-                <h2>Reserva confirmada</h2>
-                <p>Recibirás los detalles por WhatsApp</p>
-
-                <div class="reserva-code">
-                    <span>Tu código de reserva</span>
-                    <strong id="reservaCode">---</strong>
-                </div>
-
-                <div class="success-actions">
-                    <a href="#" class="btn btn-primary btn-full" id="addToCalendar" target="_blank">
-                        <i class="ph ph-calendar-plus"></i>
-                        Agregar al Calendario
-                    </a>
-                    <button class="btn btn-outline btn-full" type="button" id="newReserva">
-                        <i class="ph ph-plus"></i>
-                        Nueva Reserva
-                    </button>
-                    <a href="../landing/" class="btn btn-outline btn-full">
-                        <i class="ph ph-house"></i>
-                        Volver al Inicio
-                    </a>
-                </div>
+          <div class="success-container">
+            <div class="success-icon">
+              <i class="ph ph-check-fat"></i>
             </div>
+            <h2>Reserva confirmada</h2>
+            <p>Recibirás los detalles en tu correo electrónico</p>
+
+            <div class="reserva-code">
+              <span>Tu código de reserva</span>
+              <strong id="reservaCode">---</strong>
+            </div>
+
+            <div class="success-actions">
+              <a
+                href="#"
+                class="btn btn-primary btn-full"
+                id="addToCalendar"
+                target="_blank"
+              >
+                <i class="ph ph-calendar-plus"></i>
+                Agregar al Calendario
+              </a>
+              <a
+                href="#"
+                class="btn btn-whatsapp btn-full"
+                id="sendWhatsapp"
+                target="_blank"
+                style="display: none"
+              >
+                <i class="ph ph-whatsapp-logo"></i>
+                Enviar por WhatsApp
+              </a>
+              <button
+                class="btn btn-outline btn-full"
+                type="button"
+                id="newReserva"
+              >
+                <i class="ph ph-plus"></i>
+                Nueva Reserva
+              </button>
+              <a href="../landing/" class="btn btn-outline btn-full">
+                <i class="ph ph-house"></i>
+                Volver al Inicio
+              </a>
+            </div>
+          </div>
         </div>
+      </main>
+    </div>
 
-    </main>
-</div>
-
-<script src="reservas.js"></script>
-</body>
+    <script src="reservas.js"></script>
+  </body>
 </html>

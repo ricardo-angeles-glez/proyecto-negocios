@@ -1,64 +1,228 @@
 // ============================================
-// RESERVAS.JS - VERSIÓN CORREGIDA Y COMPLETA
-// Sin imports externos por ahora
-// Todo funciona con localStorage
+// RESERVAS.JS - VERSIÓN FINAL
+// Con validaciones, selector de país, envío a
+// Google Sheets y formato correcto
 // ============================================
 
 // ============================================
 // CONFIGURACIÓN
 // ============================================
-const CONFIG = {
-    whatsapp: '1234567890',        // ← Cambiar por tu número
-    restaurante: 'Tu Restaurante', // ← Cambiar por tu nombre
+var CONFIG = {
+    whatsapp: '5215578053787',
+    restaurante: 'La Casona',
     moneda: '$',
-    horarioAlmuerzo: ['12:00', '12:30', '13:00', '13:30', '14:00', '14:30'],
-    horarioCena:     ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30'],
-    maxPersonas: 10,
-    diasAnticipacion: 30
+    diasAnticipacion: 30,
+    googleScriptURL: '' // Se configura después
 };
+
+// Códigos de país
+var COUNTRY_CODES = [
+    { code: '+52', flag: '🇲🇽', name: 'México', maxLen: 10 },
+    { code: '+1',  flag: '🇺🇸', name: 'Estados Unidos', maxLen: 10 },
+    { code: '+57', flag: '🇨🇴', name: 'Colombia', maxLen: 10 },
+    { code: '+54', flag: '🇦🇷', name: 'Argentina', maxLen: 10 },
+    { code: '+56', flag: '🇨🇱', name: 'Chile', maxLen: 9 },
+    { code: '+51', flag: '🇵🇪', name: 'Perú', maxLen: 9 },
+    { code: '+593',flag: '🇪🇨', name: 'Ecuador', maxLen: 9 },
+    { code: '+58', flag: '🇻🇪', name: 'Venezuela', maxLen: 10 },
+    { code: '+34', flag: '🇪🇸', name: 'España', maxLen: 9 },
+    { code: '+502',flag: '🇬🇹', name: 'Guatemala', maxLen: 8 },
+    { code: '+503',flag: '🇸🇻', name: 'El Salvador', maxLen: 8 },
+    { code: '+504',flag: '🇭🇳', name: 'Honduras', maxLen: 8 }
+];
 
 // ============================================
 // ESTADO GLOBAL
 // ============================================
-let reserva = {
+var reserva = {
     personas: 2,
     fecha: null,
     hora: null,
     nombre: '',
+    countryCode: '+52',
     telefono: '',
     email: '',
     notas: ''
 };
 
-let currentStep = 1;
-let currentMonth = new Date();
+var currentStep = 1;
+var currentMonth = new Date();
+var formErrors = {};
 
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ Reservas iniciando...');
+document.addEventListener('DOMContentLoaded', function() {
     verificarElementos();
     renderCalendar();
+    renderCountrySelector();
     setupEventListeners();
-    console.log('✅ Reservas listo');
+    setupPhoneValidation();
 });
 
-// ── Verificar que todos los elementos existen ──
 function verificarElementos() {
-    const elementosRequeridos = [
+    var ids = [
         'step1', 'step2', 'step3', 'step4', 'step5',
-        'categoryNav', 'calendarDays', 'currentMonth',
+        'calendarDays', 'currentMonth',
         'toStep2', 'toStep3', 'toStep4', 'confirmReserva'
     ];
 
-    elementosRequeridos.forEach(id => {
-        const el = document.getElementById(id);
+    ids.forEach(function(id) {
+        var el = document.getElementById(id);
         if (!el) {
-            console.error(`❌ Elemento no encontrado: #${id}`);
-        } else {
-            console.log(`✅ Encontrado: #${id}`);
+            console.warn('Elemento no encontrado: #' + id);
         }
+    });
+}
+
+// ============================================
+// SELECTOR DE PAÍS
+// ============================================
+function renderCountrySelector() {
+    var container = document.getElementById('phoneContainer');
+    if (!container) return;
+
+    var html = '<div class="phone-input-group">' +
+        '<div class="country-select-wrapper">' +
+        '<select id="countryCode" class="country-select" aria-label="Código de país">';
+
+    COUNTRY_CODES.forEach(function(c) {
+        var selected = c.code === '+52' ? ' selected' : '';
+        html += '<option value="' + c.code + '"' + selected + ' data-maxlen="' + c.maxLen + '">' +
+            c.flag + ' ' + c.code +
+            '</option>';
+    });
+
+    html += '</select></div>' +
+        '<div class="phone-input-wrapper">' +
+        '<input type="tel" id="telefono" required ' +
+        'placeholder="55 1234 5678" ' +
+        'maxlength="10" ' +
+        'inputmode="numeric" ' +
+        'autocomplete="tel-national" ' +
+        'aria-label="Número de teléfono">' +
+        '</div></div>' +
+        '<span class="field-hint" id="phoneHint">10 dígitos sin espacios</span>' +
+        '<span class="field-error" id="phoneError"></span>';
+
+    container.innerHTML = html;
+}
+
+function setupPhoneValidation() {
+    var phoneInput = document.getElementById('telefono');
+    var countrySelect = document.getElementById('countryCode');
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            // Solo permitir números
+            var clean = e.target.value.replace(/\D/g, '');
+            var maxLen = getMaxPhoneLength();
+            if (clean.length > maxLen) {
+                clean = clean.substring(0, maxLen);
+            }
+            e.target.value = clean;
+            clearFieldError('telefono');
+        });
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', function() {
+            var maxLen = getMaxPhoneLength();
+            var phoneInput = document.getElementById('telefono');
+            if (phoneInput) {
+                phoneInput.maxLength = maxLen;
+                phoneInput.value = phoneInput.value.substring(0, maxLen);
+            }
+            var hint = document.getElementById('phoneHint');
+            if (hint) hint.textContent = maxLen + ' dígitos sin espacios';
+            reserva.countryCode = this.value;
+        });
+    }
+}
+
+function getMaxPhoneLength() {
+    var select = document.getElementById('countryCode');
+    if (!select) return 10;
+    var option = select.options[select.selectedIndex];
+    return parseInt(option.getAttribute('data-maxlen')) || 10;
+}
+
+// ============================================
+// VALIDACIONES
+// ============================================
+function validarPaso3() {
+    formErrors = {};
+    var isValid = true;
+
+    // Nombre
+    var nombre = document.getElementById('nombre');
+    if (!nombre || !nombre.value.trim()) {
+        setFieldError('nombre', 'El nombre es obligatorio');
+        isValid = false;
+    } else if (nombre.value.trim().length < 3) {
+        setFieldError('nombre', 'Ingresa tu nombre completo');
+        isValid = false;
+    }
+
+    // Teléfono
+    var telefono = document.getElementById('telefono');
+    var maxLen = getMaxPhoneLength();
+    if (!telefono || !telefono.value.trim()) {
+        setFieldError('telefono', 'El teléfono es obligatorio');
+        isValid = false;
+    } else if (telefono.value.replace(/\D/g, '').length < maxLen) {
+        setFieldError('telefono', 'Debe tener ' + maxLen + ' dígitos');
+        isValid = false;
+    }
+
+    // Email
+    var email = document.getElementById('email');
+    if (!email || !email.value.trim()) {
+        setFieldError('email', 'El email es obligatorio para enviarte la confirmación');
+        isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        setFieldError('email', 'Ingresa un email válido');
+        isValid = false;
+    }
+
+    return isValid;
+}
+
+function setFieldError(fieldId, message) {
+    formErrors[fieldId] = message;
+    var input = document.getElementById(fieldId);
+    var errorEl = document.getElementById(fieldId + 'Error');
+
+    if (input) {
+        input.classList.add('input-error');
+        input.setAttribute('aria-invalid', 'true');
+    }
+
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+}
+
+function clearFieldError(fieldId) {
+    delete formErrors[fieldId];
+    var input = document.getElementById(fieldId);
+    var errorEl = document.getElementById(fieldId + 'Error');
+
+    if (input) {
+        input.classList.remove('input-error');
+        input.removeAttribute('aria-invalid');
+    }
+
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.style.display = 'none';
+    }
+}
+
+function clearAllErrors() {
+    ['nombre', 'telefono', 'email'].forEach(function(id) {
+        clearFieldError(id);
     });
 }
 
@@ -66,70 +230,65 @@ function verificarElementos() {
 // NAVEGACIÓN ENTRE PASOS
 // ============================================
 function goToStep(step) {
-    console.log(`➡️ Navegando a paso ${step}`);
-
-    // Verificar que el paso existe antes de continuar
-    const stepEl = document.getElementById(`step${step}`);
+    var stepEl = document.getElementById('step' + step);
     if (!stepEl) {
-        console.error(`❌ No existe #step${step} en el HTML`);
+        console.error('No existe el paso ' + step);
         return;
     }
 
-    // Ocultar todos los pasos
-    for (let i = 1; i <= 5; i++) {
-        const el = document.getElementById(`step${i}`);
+    // Ocultar todos
+    for (var i = 1; i <= 5; i++) {
+        var el = document.getElementById('step' + i);
         if (el) el.classList.remove('active');
     }
 
-    // Actualizar stepper visual
-    document.querySelectorAll('.stepper .step').forEach(s => {
+    // Stepper visual
+    document.querySelectorAll('.stepper .step').forEach(function(s) {
         s.classList.remove('active', 'completed');
     });
-    document.querySelectorAll('.step-line').forEach(l => {
+    document.querySelectorAll('.step-line').forEach(function(l) {
         l.classList.remove('active');
     });
 
-    // Marcar pasos completados
-    for (let i = 1; i < step; i++) {
-        const stepBtn = document.querySelector(`.step[data-step="${i}"]`);
-        if (stepBtn) stepBtn.classList.add('completed');
+    for (var j = 1; j < step; j++) {
+        var sb = document.querySelector('.step[data-step="' + j + '"]');
+        if (sb) sb.classList.add('completed');
     }
 
-    // Activar líneas
-    const lines = document.querySelectorAll('.step-line');
-    for (let i = 0; i < step - 1 && i < lines.length; i++) {
-        lines[i].classList.add('active');
+    var lines = document.querySelectorAll('.step-line');
+    for (var k = 0; k < step - 1 && k < lines.length; k++) {
+        lines[k].classList.add('active');
     }
 
-    // Mostrar paso actual
     stepEl.classList.add('active');
-
-    // Marcar step actual en stepper
-    const stepBtn = document.querySelector(`.step[data-step="${step}"]`);
+    var stepBtn = document.querySelector('.step[data-step="' + step + '"]');
     if (stepBtn) stepBtn.classList.add('active');
 
     currentStep = step;
-
-    // Actualizar info contextual
     actualizarInfoContextual(step);
-
-    // Scroll al inicio
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function actualizarInfoContextual(step) {
     if (step === 2 && reserva.fecha) {
-        const el = document.getElementById('selectedDateInfo');
+        var el = document.getElementById('selectedDateInfo');
         if (el) {
-            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            el.textContent = `📅 ${reserva.fecha.toLocaleDateString('es-ES', opciones)} · 👥 ${reserva.personas} persona(s)`;
+            el.innerHTML =
+                '<i class="ph ph-calendar"></i> ' +
+                reserva.fecha.toLocaleDateString('es-MX', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                }) + ' &middot; ' + reserva.personas + ' persona(s)';
         }
     }
 
     if (step === 3 && reserva.hora) {
-        const el = document.getElementById('selectedTimeInfo');
-        if (el) {
-            el.textContent = `📅 ${formatearFechaCorta(reserva.fecha)} · ⏰ ${reserva.hora} · 👥 ${reserva.personas} persona(s)`;
+        var el2 = document.getElementById('selectedTimeInfo');
+        if (el2) {
+            el2.innerHTML =
+                '<i class="ph ph-calendar"></i> ' +
+                formatearFechaCorta(reserva.fecha) +
+                ' &middot; <i class="ph ph-clock"></i> ' + reserva.hora +
+                ' &middot; <i class="ph ph-users"></i> ' + reserva.personas;
         }
     }
 
@@ -142,228 +301,249 @@ function actualizarInfoContextual(step) {
 // CALENDARIO
 // ============================================
 function renderCalendar() {
-    const year  = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
+    var year  = currentMonth.getFullYear();
+    var month = currentMonth.getMonth();
 
-    const meses = [
+    var meses = [
         'Enero','Febrero','Marzo','Abril','Mayo','Junio',
         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
     ];
 
-    const mesEl = document.getElementById('currentMonth');
-    if (mesEl) mesEl.textContent = `${meses[month]} ${year}`;
+    var mesEl = document.getElementById('currentMonth');
+    if (mesEl) mesEl.textContent = meses[month] + ' ' + year;
 
-    const daysContainer = document.getElementById('calendarDays');
+    var daysContainer = document.getElementById('calendarDays');
     if (!daysContainer) return;
-
     daysContainer.innerHTML = '';
 
-    const primerDia    = new Date(year, month, 1).getDay();
-    const diasEnMes    = new Date(year, month + 1, 0).getDate();
-    const hoy          = new Date();
+    var primerDia = new Date(year, month, 1).getDay();
+    var diasEnMes = new Date(year, month + 1, 0).getDate();
+    var hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const maxFecha     = new Date();
+    var maxFecha = new Date();
     maxFecha.setDate(maxFecha.getDate() + CONFIG.diasAnticipacion);
 
-    // Espacios vacíos al inicio
-    for (let i = 0; i < primerDia; i++) {
-        const empty = document.createElement('div');
+    for (var i = 0; i < primerDia; i++) {
+        var empty = document.createElement('div');
         empty.className = 'calendar-day empty';
         daysContainer.appendChild(empty);
     }
 
-    // Días del mes
-    for (let day = 1; day <= diasEnMes; day++) {
-        const fecha = new Date(year, month, day);
-        const btn   = document.createElement('button');
-        btn.type    = 'button';
+    for (var day = 1; day <= diasEnMes; day++) {
+        var fecha = new Date(year, month, day);
+        var btn = document.createElement('button');
+        btn.type = 'button';
         btn.className = 'calendar-day';
         btn.textContent = day;
 
-        const isPasado  = fecha < hoy;
-        const isFuturo  = fecha > maxFecha;
-        const isHoy     = fecha.toDateString() === hoy.toDateString();
-        const isSelected = reserva.fecha &&
-            fecha.toDateString() === reserva.fecha.toDateString();
-
-        if (isPasado || isFuturo) {
+        if (fecha < hoy || fecha > maxFecha) {
             btn.classList.add('disabled');
             btn.disabled = true;
         } else {
-            btn.addEventListener('click', () => seleccionarFecha(fecha, btn));
+            (function(f, b) {
+                b.addEventListener('click', function() {
+                    seleccionarFecha(f, b);
+                });
+            })(fecha, btn);
         }
 
-        if (isHoy)      btn.classList.add('today');
-        if (isSelected) btn.classList.add('selected');
+        if (fecha.toDateString() === hoy.toDateString()) {
+            btn.classList.add('today');
+        }
+        if (reserva.fecha && fecha.toDateString() === reserva.fecha.toDateString()) {
+            btn.classList.add('selected');
+        }
 
         daysContainer.appendChild(btn);
     }
 }
 
 function seleccionarFecha(fecha, btn) {
-    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+    document.querySelectorAll('.calendar-day').forEach(function(d) {
+        d.classList.remove('selected');
+    });
     btn.classList.add('selected');
     reserva.fecha = fecha;
-    console.log('📅 Fecha seleccionada:', fecha.toLocaleDateString());
     actualizarBotonesNavegacion();
 }
 
 // ============================================
-// RESUMEN (PASO 4)
+// RESUMEN
 // ============================================
 function actualizarResumen() {
-    const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    var opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
-    const campos = {
-        'summaryDate':     reserva.fecha?.toLocaleDateString('es-ES', opciones) || '',
-        'summaryTime':     reserva.hora || '',
-        'summaryPersonas': `${reserva.personas} persona(s)`,
-        'summaryNombre':   reserva.nombre,
-        'summaryTelefono': reserva.telefono
-    };
+    setText('summaryDate', reserva.fecha
+        ? reserva.fecha.toLocaleDateString('es-MX', opciones) : '-');
+    setText('summaryTime', reserva.hora || '-');
+    setText('summaryPersonas', reserva.personas + ' persona(s)');
+    setText('summaryNombre', reserva.nombre);
+    setText('summaryTelefono', reserva.countryCode + ' ' + reserva.telefono);
+    setText('summaryEmail', reserva.email);
 
-    Object.entries(campos).forEach(([id, valor]) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = valor;
-    });
-
-    // Notas (mostrar solo si hay)
-    const notasContainer = document.getElementById('summaryNotasContainer');
-    const notasEl = document.getElementById('summaryNotas');
-    if (notasContainer && notasEl) {
+    var notasContainer = document.getElementById('summaryNotasContainer');
+    if (notasContainer) {
         if (reserva.notas) {
             notasContainer.style.display = 'flex';
-            notasEl.textContent = reserva.notas;
+            setText('summaryNotas', reserva.notas);
         } else {
             notasContainer.style.display = 'none';
         }
     }
 }
 
+function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
 // ============================================
 // CONFIRMAR RESERVA
 // ============================================
 function confirmarReserva() {
-    console.log('🎯 Confirmando reserva...');
+    var btnConfirm = document.getElementById('confirmReserva');
 
-    const btnConfirm = document.getElementById('confirmReserva');
-
-    // Deshabilitar botón mientras procesa
     if (btnConfirm) {
         btnConfirm.disabled = true;
-        btnConfirm.innerHTML = `
-            <span style="display:inline-flex;align-items:center;gap:8px">
-                ⏳ Procesando...
-            </span>
-        `;
+        btnConfirm.innerHTML = '<span class="btn-loading"></span> Procesando...';
     }
 
-    try {
-        // Generar código único
-        const code = generarCodigo();
+    var code = generarCodigo();
+    var telefonoCompleto = reserva.countryCode + reserva.telefono;
 
-        // Guardar en localStorage
-        guardarReserva(code);
-
-        // Mostrar código en pantalla
-        const codeEl = document.getElementById('reservaCode');
-        if (codeEl) codeEl.textContent = code;
-
-        // Preparar mensaje WhatsApp
-        const fechaFormateada = reserva.fecha.toLocaleDateString('es-ES', {
-            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-        });
-
-        const mensaje =
-`🍽️ *NUEVA RESERVA - ${CONFIG.restaurante}*
-
-📋 Código: *${code}*
-👤 Nombre: ${reserva.nombre}
-📞 Teléfono: ${reserva.telefono}
-📅 Fecha: ${fechaFormateada}
-⏰ Hora: ${reserva.hora}
-👥 Personas: ${reserva.personas}
-${reserva.notas ? `📝 Notas: ${reserva.notas}` : ''}
-
-✅ Reserva confirmada`;
-
-        const whatsappURL = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(mensaje)}`;
-
-        // Configurar enlace de calendario
-        configurarEnlaceCalendario(code);
-
-        // Ir al paso de éxito
-        goToStep(5);
-
-        // Abrir WhatsApp después de un momento
-        setTimeout(() => {
-            window.open(whatsappURL, '_blank');
-        }, 1500);
-
-        console.log('✅ Reserva confirmada:', code);
-
-    } catch (error) {
-        console.error('❌ Error al crear reserva:', error);
-
-        // Restaurar botón
-        if (btnConfirm) {
-            btnConfirm.disabled = false;
-            btnConfirm.innerHTML = '<i class="fas fa-check"></i> Confirmar Reserva';
-        }
-
-        alert('Hubo un error al procesar tu reserva. Por favor intenta de nuevo.');
-    }
-}
-
-function guardarReserva(code) {
-    const reservas = JSON.parse(localStorage.getItem('reservas') || '[]');
-    reservas.push({
+    // Guardar localmente
+    var reservaData = {
         codigo: code,
         nombre: reserva.nombre,
-        telefono: reserva.telefono,
-        email: reserva.email || '',
+        telefono: telefonoCompleto,
+        email: reserva.email,
         fecha: reserva.fecha.toISOString().split('T')[0],
         hora: reserva.hora,
         personas: reserva.personas,
         notas: reserva.notas || '',
         estado: 'confirmada',
         createdAt: new Date().toISOString()
+    };
+
+    guardarReservaLocal(reservaData);
+    enviarAGoogleSheets(reservaData);
+
+    // Mostrar código
+    setText('reservaCode', code);
+
+    // Configurar Google Calendar
+    configurarCalendario(code);
+
+    // Ir al paso 5
+    goToStep(5);
+
+    // WhatsApp (abrir en nueva pestaña, no redirigir)
+    var fechaFormateada = reserva.fecha.toLocaleDateString('es-MX', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
-    localStorage.setItem('reservas', JSON.stringify(reservas));
+
+    var mensaje =
+        '*RESERVA CONFIRMADA - ' + CONFIG.restaurante + '*\n\n' +
+        'Codigo: *' + code + '*\n' +
+        'Nombre: ' + reserva.nombre + '\n' +
+        'Telefono: ' + telefonoCompleto + '\n' +
+        'Fecha: ' + fechaFormateada + '\n' +
+        'Hora: ' + reserva.hora + '\n' +
+        'Personas: ' + reserva.personas +
+        (reserva.notas ? '\nNotas: ' + reserva.notas : '');
+
+    var whatsappURL = 'https://wa.me/' + CONFIG.whatsapp +
+        '?text=' + encodeURIComponent(mensaje);
+
+    // Mostrar botón de WhatsApp en paso 5
+    var wpBtn = document.getElementById('sendWhatsapp');
+    if (wpBtn) {
+        wpBtn.href = whatsappURL;
+        wpBtn.style.display = 'flex';
+    }
+
+    // Restaurar botón
+    if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = '<i class="ph ph-check"></i> Confirmar';
+    }
 }
 
-function configurarEnlaceCalendario(code) {
-    const addToCalBtn = document.getElementById('addToCalendar');
-    if (!addToCalBtn || !reserva.fecha) return;
+function guardarReservaLocal(data) {
+    try {
+        var reservas = JSON.parse(localStorage.getItem('reservas') || '[]');
+        reservas.push(data);
+        localStorage.setItem('reservas', JSON.stringify(reservas));
+    } catch (e) {
+        console.warn('Error guardando localmente:', e);
+    }
+}
 
-    const startDate = new Date(reserva.fecha);
-    const [hours, minutes] = reserva.hora.split(':');
-    startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+function enviarAGoogleSheets(data) {
+    if (!CONFIG.googleScriptURL) {
+        console.warn('Google Script URL no configurada');
+        return;
+    }
 
-    const endDate = new Date(startDate);
-    endDate.setHours(endDate.getHours() + 2);
+    var payload = {
+        action: 'nuevaReserva',
+        token: window.ENV ? window.ENV.SECRET_TOKEN : '',
+        nombre: data.nombre,
+        telefono: data.telefono,
+        email: data.email,
+        fecha: data.fecha,
+        hora: data.hora,
+        personas: data.personas,
+        notas: data.notas,
+        ip: 'web-client'
+    };
 
-    const fmt = (d) =>
-        d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    fetch(CONFIG.googleScriptURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+        if (result.status === 'success') {
+            console.log('Google Sheets: reserva guardada');
+        } else {
+            console.warn('Google Sheets error:', result.message);
+        }
+    })
+    .catch(function(err) {
+        console.warn('Google Sheets offline, guardado localmente:', err);
+    });
+}
 
-    const titulo = encodeURIComponent(`Reserva en ${CONFIG.restaurante}`);
-    const detalle = encodeURIComponent(
-        `Reserva para ${reserva.personas} personas. Código: ${code}`
-    );
+function configurarCalendario(code) {
+    var btn = document.getElementById('addToCalendar');
+    if (!btn || !reserva.fecha) return;
 
-    addToCalBtn.href =
-        `https://calendar.google.com/calendar/render?action=TEMPLATE` +
-        `&text=${titulo}&dates=${fmt(startDate)}/${fmt(endDate)}` +
-        `&details=${detalle}`;
+    var start = new Date(reserva.fecha);
+    var parts = reserva.hora.split(':');
+    start.setHours(parseInt(parts[0]), parseInt(parts[1]), 0, 0);
+
+    var end = new Date(start);
+    end.setHours(end.getHours() + 2);
+
+    var fmt = function(d) {
+        return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    };
+
+    btn.href = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+        '&text=' + encodeURIComponent('Reserva en ' + CONFIG.restaurante) +
+        '&dates=' + fmt(start) + '/' + fmt(end) +
+        '&details=' + encodeURIComponent('Reserva ' + code + ' para ' + reserva.personas + ' personas');
 }
 
 // ============================================
 // UTILIDADES
 // ============================================
 function generarCodigo() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let code = 'RES-';
-    for (let i = 0; i < 6; i++) {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var code = 'RES-';
+    for (var i = 0; i < 6; i++) {
         code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return code;
@@ -371,47 +551,40 @@ function generarCodigo() {
 
 function formatearFechaCorta(fecha) {
     if (!fecha) return '';
-    return fecha.toLocaleDateString('es-ES', {
+    return fecha.toLocaleDateString('es-MX', {
         weekday: 'short', day: 'numeric', month: 'short'
     });
 }
 
 function actualizarBotonesNavegacion() {
-    const toStep2 = document.getElementById('toStep2');
-    const toStep3 = document.getElementById('toStep3');
-
+    var toStep2 = document.getElementById('toStep2');
+    var toStep3 = document.getElementById('toStep3');
     if (toStep2) toStep2.disabled = !reserva.fecha;
     if (toStep3) toStep3.disabled = !reserva.hora;
 }
 
 function resetearFormulario() {
     reserva = {
-        personas: 2,
-        fecha: null,
-        hora: null,
-        nombre: '',
-        telefono: '',
-        email: '',
-        notas: ''
+        personas: 2, fecha: null, hora: null,
+        nombre: '', countryCode: '+52',
+        telefono: '', email: '', notas: ''
     };
 
-    // Reset formulario
-    const form = document.getElementById('reservaForm');
+    var form = document.getElementById('reservaForm');
     if (form) form.reset();
 
-    // Reset hora seleccionada
-    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.time-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.persona-btn').forEach(function(b) { b.classList.remove('active'); });
 
-    // Reset personas
-    document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('active'));
-    const defaultPersonas = document.querySelector('.persona-btn[data-personas="2"]');
-    if (defaultPersonas) defaultPersonas.classList.add('active');
+    var def = document.querySelector('.persona-btn[data-personas="2"]');
+    if (def) def.classList.add('active');
 
-    // Reset calendario
+    var cs = document.getElementById('countryCode');
+    if (cs) cs.value = '+52';
+
+    clearAllErrors();
     currentMonth = new Date();
     renderCalendar();
-
-    // Ir al paso 1
     goToStep(1);
 }
 
@@ -420,139 +593,132 @@ function resetearFormulario() {
 // ============================================
 function setupEventListeners() {
 
-    // ── Selector de personas ─────────────────
-    document.querySelectorAll('.persona-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.persona-btn')
-                .forEach(b => b.classList.remove('active'));
+    // Personas
+    document.querySelectorAll('.persona-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.persona-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
-            reserva.personas = btn.dataset.personas;
-            console.log('👥 Personas:', reserva.personas);
+            reserva.personas = btn.getAttribute('data-personas');
         });
     });
 
-    // ── Navegación del calendario ────────────
-    const prevBtn = document.getElementById('prevMonth');
-    const nextBtn = document.getElementById('nextMonth');
+    // Calendario nav
+    var prev = document.getElementById('prevMonth');
+    var next = document.getElementById('nextMonth');
 
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            const hoy = new Date();
-            // No ir a meses anteriores al actual
-            if (
-                currentMonth.getFullYear() > hoy.getFullYear() ||
-                currentMonth.getMonth() > hoy.getMonth()
-            ) {
+    if (prev) {
+        prev.addEventListener('click', function() {
+            var hoy = new Date();
+            if (currentMonth.getFullYear() > hoy.getFullYear() ||
+                currentMonth.getMonth() > hoy.getMonth()) {
                 currentMonth.setMonth(currentMonth.getMonth() - 1);
                 renderCalendar();
             }
         });
     }
 
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
+    if (next) {
+        next.addEventListener('click', function() {
             currentMonth.setMonth(currentMonth.getMonth() + 1);
             renderCalendar();
         });
     }
 
-    // ── Time slots ───────────────────────────
-    document.querySelectorAll('.time-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    // Time slots
+    document.querySelectorAll('.time-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
             if (btn.classList.contains('unavailable')) return;
-            document.querySelectorAll('.time-btn')
-                .forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.time-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
-            reserva.hora = btn.dataset.time;
-            console.log('⏰ Hora:', reserva.hora);
+            reserva.hora = btn.getAttribute('data-time');
             actualizarBotonesNavegacion();
         });
     });
 
-    // ── Navegación paso 1 → 2 ───────────────
-    const toStep2 = document.getElementById('toStep2');
+    // Paso 1 → 2
+    var toStep2 = document.getElementById('toStep2');
     if (toStep2) {
-        toStep2.addEventListener('click', () => {
-            if (!reserva.fecha) {
-                alert('Por favor selecciona una fecha');
-                return;
-            }
+        toStep2.addEventListener('click', function() {
+            if (!reserva.fecha) return;
             goToStep(2);
         });
     }
 
-    // ── Navegación paso 2 → 3 ───────────────
-    const toStep3 = document.getElementById('toStep3');
+    // Paso 2 → 3
+    var toStep3 = document.getElementById('toStep3');
     if (toStep3) {
-        toStep3.addEventListener('click', () => {
-            if (!reserva.hora) {
-                alert('Por favor selecciona una hora');
-                return;
-            }
+        toStep3.addEventListener('click', function() {
+            if (!reserva.hora) return;
             goToStep(3);
         });
     }
 
-    // ── Regresar paso 2 → 1 ─────────────────
-    const backToStep1 = document.getElementById('backToStep1');
-    if (backToStep1) {
-        backToStep1.addEventListener('click', () => goToStep(1));
-    }
-
-    // ── Navegación paso 3 → 4 ───────────────
-    const toStep4 = document.getElementById('toStep4');
+    // Paso 3 → 4 (con validación)
+    var toStep4 = document.getElementById('toStep4');
     if (toStep4) {
-        toStep4.addEventListener('click', () => {
-            // Recoger datos del formulario
-            const nombre    = document.getElementById('nombre')?.value?.trim();
-            const telefono  = document.getElementById('telefono')?.value?.trim();
-            const email     = document.getElementById('email')?.value?.trim();
-            const notas     = document.getElementById('notas')?.value?.trim();
+        toStep4.addEventListener('click', function() {
+            clearAllErrors();
 
-            // Validar campos requeridos
-            if (!nombre) {
-                alert('Por favor ingresa tu nombre');
-                document.getElementById('nombre')?.focus();
-                return;
-            }
-            if (!telefono) {
-                alert('Por favor ingresa tu teléfono');
-                document.getElementById('telefono')?.focus();
+            if (!validarPaso3()) {
+                // Focus en primer campo con error
+                var firstError = Object.keys(formErrors)[0];
+                var el = document.getElementById(firstError);
+                if (el) el.focus();
                 return;
             }
 
-            // Guardar en estado
-            reserva.nombre   = nombre;
-            reserva.telefono = telefono;
-            reserva.email    = email || '';
-            reserva.notas    = notas || '';
+            reserva.nombre = document.getElementById('nombre').value.trim();
+            reserva.telefono = document.getElementById('telefono').value.replace(/\D/g, '');
+            reserva.email = document.getElementById('email').value.trim();
+            reserva.notas = document.getElementById('notas')
+                ? document.getElementById('notas').value.trim() : '';
 
-            console.log('📝 Datos:', { nombre, telefono });
+            var cs = document.getElementById('countryCode');
+            if (cs) reserva.countryCode = cs.value;
+
             goToStep(4);
         });
     }
 
-    // ── Regresar paso 3 → 2 ─────────────────
-    const backToStep2 = document.getElementById('backToStep2');
-    if (backToStep2) {
-        backToStep2.addEventListener('click', () => goToStep(2));
-    }
+    // Clear errors on input
+    ['nombre', 'email'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function() {
+                clearFieldError(id);
+            });
+        }
+    });
 
-    // ── Regresar paso 4 → 3 ─────────────────
-    const backToStep3 = document.getElementById('backToStep3');
-    if (backToStep3) {
-        backToStep3.addEventListener('click', () => goToStep(3));
-    }
+    // Back buttons
+    var backs = {
+        'backToStep1': 1,
+        'backToStep2': 2,
+        'backToStep3': 3
+    };
 
-    // ── Confirmar reserva ────────────────────
-    const confirmBtn = document.getElementById('confirmReserva');
+    Object.keys(backs).forEach(function(btnId) {
+        var btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                goToStep(backs[btnId]);
+            });
+        }
+    });
+
+    // Confirmar
+    var confirmBtn = document.getElementById('confirmReserva');
     if (confirmBtn) {
         confirmBtn.addEventListener('click', confirmarReserva);
     }
 
-    // ── Nueva reserva ────────────────────────
-    const newReservaBtn = document.getElementById('newReserva');
-    if (newReservaBtn) {
-        newReservaBtn.addEventListener('click', resetearFormulario);
+    // Nueva reserva
+    var newBtn = document.getElementById('newReserva');
+    if (newBtn) {
+        newBtn.addEventListener('click', resetearFormulario);
     }
 }

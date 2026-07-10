@@ -2,8 +2,17 @@
 // MENÚ DIGITAL - SIN IMPORTS (compatibilidad)
 // ============================================
 
+// ── Imagen de fallback (sin peticiones externas) ──
+var FALLBACK_IMG = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80">' +
+    '<rect width="80" height="80" fill="#F5ECD7" rx="10"/>' +
+    '<text x="40" y="50" text-anchor="middle" font-size="32" ' +
+    'font-family="serif" fill="#8B7355">?</text>' +
+    '</svg>'
+);
+
 // ── Datos del menú ───────────────────────────
-const menuData = {
+var menuData = {
     restaurante: {
         nombre: 'La Casona',
         descripcion: 'Cocina mexicana tradicional',
@@ -195,11 +204,11 @@ function renderTagFilters() {
     if (!container) return;
 
     var iconMap = {
-        'vegetariano': 'ph-leaf',
-        'popular': 'ph-star',
-        'chef recomienda': 'ph-chef-hat',
-        'saludable': 'ph-heart',
-        'refrescante': 'ph-drop'
+        'vegetariano':      'ph-leaf',
+        'popular':          'ph-star',
+        'chef recomienda':  'ph-chef-hat',
+        'saludable':        'ph-heart',
+        'refrescante':      'ph-drop'
     };
 
     Object.keys(allTags).forEach(function(tag) {
@@ -259,6 +268,7 @@ function renderMenu() {
     }
 }
 
+// ── FUNCIÓN CORREGIDA - sin via.placeholder.com ──
 function createMenuItem(item) {
     var div = document.createElement('div');
     div.className = 'menu-item' + (!item.disponible ? ' unavailable' : '');
@@ -268,26 +278,49 @@ function createMenuItem(item) {
     }
 
     var moneda = menuData.restaurante.moneda;
+    var imgSrc = item.imagen || FALLBACK_IMG;
+
     var tags = (item.etiquetas || []).map(function(tag) {
-        return '<span class="item-tag' + (tag === 'popular' ? ' popular' : '') + '">' + tag + '</span>';
+        return '<span class="item-tag' +
+            (tag === 'popular' ? ' popular' : '') +
+            '">' + tag + '</span>';
     }).join('');
 
-    div.innerHTML =
-        '<img class="menu-item-image" ' +
-        'src="' + (item.imagen || 'https://via.placeholder.com/80?text=Menu') + '" ' +
-        'alt="' + item.nombre + '" loading="lazy" ' +
-        'onerror="this.src=\'https://via.placeholder.com/80?text=Menu\'">' +
-        '<div class="menu-item-info">' +
-            '<div>' +
-                '<div class="menu-item-name">' + item.nombre + '</div>' +
-                '<div class="menu-item-desc">' + (item.descripcion || '') + '</div>' +
-            '</div>' +
-            '<div class="menu-item-bottom">' +
-                '<span class="menu-item-price">' + moneda + item.precio.toFixed(2) + '</span>' +
-                '<div class="menu-item-tags">' + tags + '</div>' +
-            '</div>' +
+    // ── La clave está en el onerror: usa FALLBACK_IMG ──
+    var img = document.createElement('img');
+    img.className = 'menu-item-image';
+    img.src = imgSrc;
+    img.alt = item.nombre;
+    img.loading = 'lazy';
+    img.onerror = function() {
+        // Al fallar, usa el SVG inline (sin petición externa)
+        this.onerror = null; // Evitar loop infinito
+        this.src = FALLBACK_IMG;
+    };
+
+    var info = document.createElement('div');
+    info.className = 'menu-item-info';
+    info.innerHTML =
+        '<div>' +
+            '<div class="menu-item-name">' + item.nombre + '</div>' +
+            '<div class="menu-item-desc">' + (item.descripcion || '') + '</div>' +
         '</div>' +
-        (!item.disponible ? '<span class="unavailable-badge">Agotado</span>' : '');
+        '<div class="menu-item-bottom">' +
+            '<span class="menu-item-price">' +
+                moneda + item.precio.toFixed(2) +
+            '</span>' +
+            '<div class="menu-item-tags">' + tags + '</div>' +
+        '</div>';
+
+    div.appendChild(img);
+    div.appendChild(info);
+
+    if (!item.disponible) {
+        var badge = document.createElement('span');
+        badge.className = 'unavailable-badge';
+        badge.textContent = 'Agotado';
+        div.appendChild(badge);
+    }
 
     return div;
 }
@@ -299,22 +332,43 @@ function openModal(item) {
     var moneda = menuData.restaurante.moneda;
     var wp = menuData.restaurante.whatsapp;
 
-    document.getElementById('modalImage').style.backgroundImage = 'url(' + item.imagen + ')';
+    // ── Imagen del modal también con fallback ──
+    var modalImageEl = document.getElementById('modalImage');
+    if (modalImageEl) {
+        var testImg = new Image();
+        testImg.onload = function() {
+            modalImageEl.style.backgroundImage = 'url(' + item.imagen + ')';
+        };
+        testImg.onerror = function() {
+            modalImageEl.style.backgroundImage = 'none';
+            modalImageEl.style.background = '#F5ECD7';
+            modalImageEl.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;' +
+                'height:100%;font-size:3rem;color:#8B7355;">?</div>';
+        };
+        testImg.src = item.imagen || '';
+    }
+
     document.getElementById('modalName').textContent = item.nombre;
     document.getElementById('modalDesc').textContent = item.descripcion || '';
-    document.getElementById('modalPrice').textContent = moneda + item.precio.toFixed(2);
+    document.getElementById('modalPrice').textContent =
+        moneda + item.precio.toFixed(2);
 
     var tagsEl = document.getElementById('modalTags');
     if (tagsEl) {
         tagsEl.innerHTML = (item.etiquetas || []).map(function(tag) {
-            return '<span class="item-tag' + (tag === 'popular' ? ' popular' : '') + '">' + tag + '</span>';
+            return '<span class="item-tag' +
+                (tag === 'popular' ? ' popular' : '') +
+                '">' + tag + '</span>';
         }).join('');
     }
 
-    var msg = 'Hola! Me gustaría pedir: *' + item.nombre + '* (' + moneda + item.precio.toFixed(2) + ')';
+    var msg = 'Hola! Me gustaria pedir: *' + item.nombre +
+        '* (' + moneda + item.precio.toFixed(2) + ')';
     var wpBtn = document.getElementById('modalWhatsapp');
     if (wpBtn) {
-        wpBtn.href = 'https://wa.me/' + wp + '?text=' + encodeURIComponent(msg);
+        wpBtn.href = 'https://wa.me/' + wp +
+            '?text=' + encodeURIComponent(msg);
     }
 
     overlay.classList.add('active');
@@ -342,7 +396,9 @@ function setupEventListeners() {
         catNav.addEventListener('click', function(e) {
             var btn = e.target.closest('.category-btn');
             if (!btn) return;
-            document.querySelectorAll('.category-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.category-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
             activeCategory = btn.getAttribute('data-category');
             renderMenu();
@@ -355,7 +411,9 @@ function setupEventListeners() {
         tagContainer.addEventListener('click', function(e) {
             var btn = e.target.closest('.tag-btn');
             if (!btn) return;
-            document.querySelectorAll('.tag-btn').forEach(function(b) { b.classList.remove('active'); });
+            document.querySelectorAll('.tag-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
             btn.classList.add('active');
             activeTag = btn.getAttribute('data-tag');
             renderMenu();
@@ -375,25 +433,35 @@ function setupEventListeners() {
         });
     }
 
-    // Modal
+    // Modal close button
     var closeBtn = document.getElementById('modalClose');
     if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
+    // Modal overlay click
     var overlay = document.getElementById('modalOverlay');
-    if (overlay) overlay.addEventListener('click', function(e) {
-        if (e.target === e.currentTarget) closeModal();
-    });
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === e.currentTarget) closeModal();
+        });
+    }
 
-    // QR
+    // QR open
     var qrBtn = document.getElementById('fabQR');
-    if (qrBtn) qrBtn.addEventListener('click', function() {
-        document.getElementById('qrModal').classList.add('active');
-    });
+    if (qrBtn) {
+        qrBtn.addEventListener('click', function() {
+            var qrModal = document.getElementById('qrModal');
+            if (qrModal) qrModal.classList.add('active');
+        });
+    }
 
+    // QR close
     var closeQR = document.getElementById('closeQR');
-    if (closeQR) closeQR.addEventListener('click', function() {
-        document.getElementById('qrModal').classList.remove('active');
-    });
+    if (closeQR) {
+        closeQR.addEventListener('click', function() {
+            var qrModal = document.getElementById('qrModal');
+            if (qrModal) qrModal.classList.remove('active');
+        });
+    }
 
     // Escape key
     document.addEventListener('keydown', function(e) {
