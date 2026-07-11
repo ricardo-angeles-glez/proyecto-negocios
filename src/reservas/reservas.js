@@ -432,8 +432,26 @@ async function confirmarReserva() {
         resultado = await db.crearReserva(reservaData);
     } catch (error) {
         console.warn('No se pudo guardar la reserva:', error);
-        guardarReservaLocal(reservaData);
-        resultado = { success: true, codigo: code, offline: true };
+        resultado = {
+            success: false,
+            codigo: code,
+            error: 'No se pudo guardar la reserva en Google Sheets'
+        };
+    }
+
+    if (!resultado || !resultado.success || resultado.offline) {
+        var mensajeError = resultado && resultado.error
+            ? resultado.error
+            : 'No se pudo registrar la reserva. Intenta de nuevo.';
+
+        alert(mensajeError);
+
+        if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = '<i class="ph ph-check"></i> Confirmar';
+        }
+
+        return;
     }
 
     if (resultado && resultado.codigo) {

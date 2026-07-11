@@ -66,12 +66,23 @@ class Database {
         console.log("Reserva guardada en Google Sheets");
         return { success: true, codigo: response.codigo || codigo };
       }
+
+      return {
+        success: false,
+        codigo,
+        error: response.message || "Google Sheets rechazó la reserva",
+        detalles: response.errores || [],
+      };
     } catch (error) {
       console.warn("Sin conexión a Google Sheets, guardado localmente");
       this.agregarPendiente("nuevaReserva", reserva);
+      return {
+        success: false,
+        codigo,
+        offline: true,
+        error: "No se pudo conectar con Google Sheets",
+      };
     }
-
-    return { success: true, codigo, offline: true };
   }
 
   async obtenerReservas(filtros = {}) {
