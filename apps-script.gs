@@ -196,12 +196,12 @@ function crearReserva(data) {
     nombre: sanitizar(data.nombre, 100),
     telefono: sanitizar(data.telefono, 30),
     email: sanitizar(data.email || '', 120),
-    fecha: data.fecha,
-    hora: data.hora,
+    fecha: normalizarFechaValor(data.fecha),
+    hora: normalizarHoraValor(data.hora),
     personas: parseInt(data.personas, 10),
     notas: sanitizar(data.notas || '', 500),
     estado: 'confirmada',
-    timestamp: new Date().toISOString()
+    timestamp: fechaHoraLegible(new Date())
   };
 
   const targetSheet = obtenerOCrearHoja(CONFIG.SHEETS.RESERVAS, [
@@ -209,7 +209,10 @@ function crearReserva(data) {
     'Hora', 'Personas', 'Notas', 'Estado', 'Timestamp'
   ]);
 
-  targetSheet.appendRow([
+  const nextRow = targetSheet.getLastRow() + 1;
+  const range = targetSheet.getRange(nextRow, 1, 1, 10);
+  range.setNumberFormat('@');
+  range.setValues([[
     reservaLimpia.codigo,
     reservaLimpia.nombre,
     reservaLimpia.telefono,
@@ -220,7 +223,7 @@ function crearReserva(data) {
     reservaLimpia.notas,
     reservaLimpia.estado,
     reservaLimpia.timestamp
-  ]);
+  ]]);
 
   try {
     enviarEmailNotificacion(reservaLimpia);
@@ -239,8 +242,8 @@ function existeReservaDuplicada(telefono, fecha, hora) {
   for (let i = 1; i < data.length; i++) {
     if (
       data[i][2] === telefono &&
-      data[i][4] === fecha &&
-      data[i][5] === hora &&
+      normalizarFechaValor(data[i][4]) === normalizarFechaValor(fecha) &&
+      normalizarHoraValor(data[i][5]) === normalizarHoraValor(hora) &&
       data[i][8] !== 'cancelada'
     ) {
       return true;
@@ -264,6 +267,9 @@ function getReservas(params) {
     headers.forEach((header, index) => {
       row[header] = data[i][index];
     });
+    row.fecha = normalizarFechaValor(row.fecha);
+    row.hora = normalizarHoraValor(row.hora);
+    row.timestamp = normalizarTimestampValor(row.timestamp);
     reservas.push(row);
   }
 
@@ -271,7 +277,7 @@ function getReservas(params) {
     reservas = reservas.filter(r => r.estado === params.estado);
   }
   if (params.fecha) {
-    reservas = reservas.filter(r => r.fecha === params.fecha);
+    reservas = reservas.filter(r => normalizarFechaValor(r.fecha) === params.fecha);
   }
   if (params.busqueda) {
     const q = params.busqueda.toLowerCase();
@@ -326,7 +332,7 @@ function crearContacto(data) {
     sanitizar(data.email, 120),
     sanitizar(data.mensaje, 1000),
     sanitizar(data.origen || 'web', 50),
-    new Date().toISOString(),
+    fechaHoraLegible(new Date()),
     false
   ]);
 
@@ -408,7 +414,7 @@ function getContactos() {
       email: data[i][1],
       mensaje: data[i][2],
       origen: data[i][3],
-      timestamp: data[i][4],
+      timestamp: normalizarTimestampValor(data[i][4]),
       leido: data[i][5]
     });
   }
@@ -499,11 +505,41 @@ function fechaISO(date) {
   return Utilities.formatDate(date, 'America/Mexico_City', 'yyyy-MM-dd');
 }
 
+function fechaHoraLegible(date) {
+  return Utilities.formatDate(date, 'America/Mexico_City', 'yyyy-MM-dd HH:mm:ss');
+}
+
 function normalizarFechaValor(value) {
   if (Object.prototype.toString.call(value) === '[object Date]') {
     return fechaISO(value);
   }
-  return String(value).substring(0, 10);
+  if (!value) return '';
+  const texto = String(value);
+  if (/^\d{4}-\d{2}-\d{2}/.test(texto)) return texto.substring(0, 10);
+  return texto.substring(0, 10);
+}
+
+function normalizarHoraValor(value) {
+  if (!value) return '';
+  if (Object.prototype.toString.call(value) === '[object Date]') {
+    return Utilities.formatDate(value, 'America/Mexico_City', 'HH:mm');
+  }
+  const texto = String(value);
+  const match = texto.match(/(\d{1,2}):(\d{2})/);
+  if (match) return `${match[1].padStart(2, '0')}:${match[2]}`;
+  return texto;
+}
+
+function normalizarTimestampValor(value) {
+  if (!value) return '';
+  if (Object.prototype.toString.call(value) === '[object Date]') {
+    return fechaHoraLegible(value);
+  }
+  const date = new Date(value);
+  if (!isNaN(date.getTime()) && String(value).includes('T')) {
+    return fechaHoraLegible(date);
+  }
+  return String(value);
 }
 
 function testCompleto() {

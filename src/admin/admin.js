@@ -15,6 +15,11 @@ const adminState = {
     directorio: JSON.parse(localStorage.getItem('admin_contact_directory') || '[]'),
     settings: getSettings(),
     stats: {},
+    menuFiltro: {
+        categoria: 'all',
+        busqueda: ''
+    },
+    charts: {},
     filtros: {
         estado: 'all',
         fecha: '',
@@ -31,10 +36,12 @@ async function inicializarAdmin() {
     initNavegacion();
     initFiltros();
     initForms();
+    initModals();
     document.getElementById('refreshAdmin')?.addEventListener('click', cargarDashboard);
 
     cambiarVista(getViewFromHash());
     renderMenuAdmin();
+    renderMenuCategoryTabs();
     renderConfiguracion();
     renderDirectorio();
 
@@ -62,7 +69,9 @@ function initForms() {
         document.getElementById('menuDisponible').checked = true;
         renderMenuAdmin();
         renderMenuCategoryOptions();
+        renderMenuCategoryTabs();
         renderAnalytics();
+        closeModal('menuModal');
     });
 
     document.getElementById('directorioForm')?.addEventListener('submit', (event) => {
@@ -79,6 +88,7 @@ function initForms() {
         localStorage.setItem('admin_contact_directory', JSON.stringify(adminState.directorio));
         event.target.reset();
         renderDirectorio();
+        closeModal('contactModal');
     });
 
     document.getElementById('settingsForm')?.addEventListener('submit', (event) => {
@@ -100,6 +110,38 @@ function initForms() {
 
     renderMenuCategoryOptions();
     hydrateSettingsForm();
+
+    document.getElementById('menuSearch')?.addEventListener('input', (event) => {
+        adminState.menuFiltro.busqueda = event.target.value.trim().toLowerCase();
+        renderMenuAdmin();
+    });
+}
+
+function initModals() {
+    document.getElementById('openMenuModal')?.addEventListener('click', () => openModal('menuModal'));
+    document.getElementById('openContactModal')?.addEventListener('click', () => openModal('contactModal'));
+    document.querySelectorAll('[data-close-modal]').forEach((button) => {
+        button.addEventListener('click', () => closeModal(button.dataset.closeModal));
+    });
+    document.querySelectorAll('.modal-shell').forEach((modal) => {
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal(modal.id);
+        });
+    });
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
 }
 
 function initAuth() {
@@ -275,7 +317,7 @@ function renderDashboardReservas() {
         <div class="mini-row">
             <div>
                 <strong>${escapeHTML(reserva.nombre || '')}</strong>
-                <span>${escapeHTML(reserva.fecha || '')} · ${escapeHTML(reserva.hora || '')}</span>
+                <span>${escapeHTML(formatDateOnly(reserva.fecha))} · ${escapeHTML(formatTimeOnly(reserva.hora))}</span>
             </div>
             ${getBadge(reserva.estado)}
         </div>
@@ -376,7 +418,27 @@ function renderMenuAdmin() {
     setText('stat-menu-activos', activos);
     if (info) info.textContent = `${activos} activos de ${items.length}`;
 
-    container.innerHTML = `<div class="menu-admin-list">${data.categorias.map((categoria) => `
+    const categorias = data.categorias
+        .filter((categoria) => adminState.menuFiltro.categoria === 'all' || categoria.id === adminState.menuFiltro.categoria)
+        .map((categoria) => ({
+            ...categoria,
+            items: categoria.items.filter((item) => {
+                const query = adminState.menuFiltro.busqueda;
+                if (!query) return true;
+                return [item.nombre, item.descripcion, ...(item.etiquetas || [])]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(query);
+            })
+        }))
+        .filter((categoria) => categoria.items.length);
+
+    if (!categorias.length) {
+        container.innerHTML = emptyHTML('ph-magnifying-glass', 'Sin platillos', 'No hay platillos con estos filtros.', true);
+        return;
+    }
+
+    container.innerHTML = `<div class="menu-admin-grid">${categorias.map((categoria) => `
         <section class="menu-category-admin">
             <header>
                 <h3>${escapeHTML(categoria.nombre)}</h3>
@@ -412,6 +474,36 @@ function renderMenuItemAdmin(item) {
             </div>
         </article>
     `;
+}
+
+function renderMenuCategoryTabs() {
+    const container = document.getElementById('menuCategoryTabs');
+    if (!container) return;
+
+    const data = getMenuData();
+    const tabs = [
+        { id: 'all', nombre: 'Todos', count: getMenuItems().length },
+        ...data.categorias.map((categoria) => ({
+            id: categoria.id,
+            nombre: categoria.nombre,
+            count: categoria.items.length
+        }))
+    ];
+
+    container.innerHTML = tabs.map((tab) => `
+        <button type="button" class="segmented-tab ${adminState.menuFiltro.categoria === tab.id ? 'active' : ''}"
+                data-menu-category="${escapeAttribute(tab.id)}">
+            ${escapeHTML(tab.nombre)} <span>${tab.count}</span>
+        </button>
+    `).join('');
+
+    container.querySelectorAll('[data-menu-category]').forEach((button) => {
+        button.addEventListener('click', () => {
+            adminState.menuFiltro.categoria = button.dataset.menuCategory;
+            renderMenuCategoryTabs();
+            renderMenuAdmin();
+        });
+    });
 }
 
 function renderMenuCategoryOptions() {
@@ -454,30 +546,69 @@ function renderDirectorio() {
 function renderAnalytics() {
     const estadoCounts = contarPor(adminState.reservas, 'estado');
     const horaCounts = contarPor(adminState.reservas, 'hora');
+    const fechas = contarReservasPorFecha(adminState.reservas);
 
-    renderBars('analytics-estados', [
-        ['Confirmadas', estadoCounts.confirmada || 0],
-        ['Pendientes', estadoCounts.pendiente || 0],
-        ['Canceladas', estadoCounts.cancelada || 0]
-    ]);
+    renderChart('chart-estados', 'doughnut', {
+        labels: ['Confirmadas', 'Pendientes', 'Canceladas'],
+        datasets: [{
+            data: [estadoCounts.confirmada || 0, estadoCounts.pendiente || 0, estadoCounts.cancelada || 0],
+            backgroundColor: ['#6B8F71', '#C99726', '#C1694F'],
+            borderWidth: 0
+        }]
+    });
 
-    renderBars('analytics-horas', Object.entries(horaCounts)
+    const horas = Object.entries(horaCounts)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 6));
+        .slice(0, 8);
+    renderChart('chart-horas', 'bar', {
+        labels: horas.map(([hora]) => formatTimeOnly(hora)),
+        datasets: [{
+            label: 'Reservas',
+            data: horas.map(([, value]) => value),
+            backgroundColor: '#D4738C',
+            borderRadius: 8
+        }]
+    });
+
+    renderChart('chart-tendencia', 'line', {
+        labels: fechas.map(([fecha]) => formatDateShort(fecha)),
+        datasets: [{
+            label: 'Reservas',
+            data: fechas.map(([, value]) => value),
+            borderColor: '#4A6FA5',
+            backgroundColor: 'rgba(74,111,165,0.12)',
+            fill: true,
+            tension: 0.35
+        }]
+    });
 }
 
-function renderBars(containerId, rows) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+function renderChart(canvasId, type, data) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || !window.Chart) return;
 
-    const max = Math.max(...rows.map((row) => row[1]), 1);
-    container.innerHTML = `<div class="bar-list">${rows.map(([label, value]) => `
-        <div class="bar-row">
-            <span>${escapeHTML(label || 'Sin dato')}</span>
-            <div class="bar-track"><div style="width:${Math.round((value / max) * 100)}%"></div></div>
-            <strong>${value}</strong>
-        </div>
-    `).join('')}</div>`;
+    if (adminState.charts[canvasId]) {
+        adminState.charts[canvasId].destroy();
+    }
+
+    adminState.charts[canvasId] = new Chart(canvas, {
+        type,
+        data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: type === 'doughnut' ? 'bottom' : 'top',
+                    labels: { boxWidth: 10, color: '#5C4033', font: { family: 'DM Sans' } }
+                }
+            },
+            scales: type === 'doughnut' ? {} : {
+                x: { grid: { display: false }, ticks: { color: '#8B7355' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(232,213,183,0.55)' }, ticks: { precision: 0, color: '#8B7355' } }
+            }
+        }
+    });
 }
 
 function renderConfiguracion() {
@@ -529,7 +660,7 @@ function aplicarFiltros(reservas) {
             (reserva.codigo || '').toLowerCase().includes(busqueda) ||
             (reserva.telefono || '').toLowerCase().includes(busqueda);
         const coincideEstado = adminState.filtros.estado === 'all' || reserva.estado === adminState.filtros.estado;
-        const coincideFecha = !adminState.filtros.fecha || reserva.fecha === adminState.filtros.fecha;
+        const coincideFecha = !adminState.filtros.fecha || normalizarFecha(reserva.fecha) === adminState.filtros.fecha;
         return coincideBusqueda && coincideEstado && coincideFecha;
     });
 }
@@ -542,8 +673,8 @@ function renderFilaReserva(reserva) {
                 <div class="table-primary">${escapeHTML(reserva.nombre || '')}</div>
                 <div class="table-secondary">${escapeHTML(reserva.telefono || '')}</div>
             </td>
-            <td>${escapeHTML(reserva.fecha || '')}</td>
-            <td>${escapeHTML(reserva.hora || '')}</td>
+            <td>${escapeHTML(formatDateOnly(reserva.fecha))}</td>
+            <td>${escapeHTML(formatTimeOnly(reserva.hora))}</td>
             <td class="td-center"><strong>${escapeHTML(String(reserva.personas || ''))}</strong></td>
             <td>${getBadge(reserva.estado)}</td>
             <td>
@@ -619,8 +750,19 @@ function initFiltros() {
 
 async function cancelarReserva(codigo) {
     if (!codigo || !confirm(`¿Cancelar reserva ${codigo}?`)) return;
-    await db.actualizarEstadoReserva(codigo, 'cancelada');
-    await cargarDashboard();
+    adminState.reservas = adminState.reservas.map((reserva) => (
+        reserva.codigo === codigo ? { ...reserva, estado: 'cancelada' } : reserva
+    ));
+    renderReservas();
+    renderDashboardReservas();
+    renderAnalytics();
+
+    db.actualizarEstadoReserva(codigo, 'cancelada')
+        .then(() => cargarStats())
+        .catch(() => {
+            alert('No se pudo cancelar en Google Sheets. Refresca e intenta de nuevo.');
+            void cargarDashboard();
+        });
 }
 
 function contactarWhatsApp(telefono, nombre) {
@@ -671,6 +813,19 @@ function contarPor(items, key) {
     }, {});
 }
 
+function contarReservasPorFecha(reservas) {
+    const counts = reservas.reduce((acc, reserva) => {
+        const fecha = normalizarFecha(reserva.fecha);
+        if (!fecha) return acc;
+        acc[fecha] = (acc[fecha] || 0) + 1;
+        return acc;
+    }, {});
+
+    return Object.entries(counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-14);
+}
+
 function loadingHTML(text, compact = false) {
     return `<div class="loading-state ${compact ? 'compact' : ''}">
         <i class="ph ph-circle-notch spin"></i>
@@ -701,6 +856,54 @@ function formatDateTime(value) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+function formatDateOnly(value) {
+    const normalized = normalizarFecha(value);
+    if (!normalized) return '';
+    const [year, month, day] = normalized.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+function formatDateShort(value) {
+    const normalized = normalizarFecha(value);
+    if (!normalized) return '';
+    const [year, month, day] = normalized.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: 'short'
+    });
+}
+
+function formatTimeOnly(value) {
+    if (!value) return '';
+    const raw = String(value);
+    const match = raw.match(/(\d{1,2}):(\d{2})/);
+    if (match) return `${match[1].padStart(2, '0')}:${match[2]}`;
+
+    const date = new Date(raw);
+    if (!Number.isNaN(date.getTime())) {
+        return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    return raw;
+}
+
+function normalizarFecha(value) {
+    if (!value) return '';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+        return value.slice(0, 10);
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function setText(id, value) {

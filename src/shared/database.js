@@ -347,6 +347,10 @@ class Database {
       personas: reserva.personas || reserva.Personas || "",
       notas: reserva.notas || reserva.Notas || "",
       estado: reserva.estado || reserva.Estado || "pendiente",
+    })).map((reserva) => ({
+      ...reserva,
+      fecha: normalizarFechaReserva(reserva.fecha),
+      hora: normalizarHoraReserva(reserva.hora),
     }));
   }
 
@@ -430,3 +434,35 @@ export const db = new Database();
 
 // Hacer disponible globalmente también
 window.db = db;
+
+function normalizarFechaReserva(value) {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+    return value.slice(0, 10);
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizarHoraReserva(value) {
+  if (!value) return "";
+  const text = String(value);
+  const match = text.match(/(\d{1,2}):(\d{2})/);
+  if (match && !text.startsWith("1899-12-30")) {
+    return `${match[1].padStart(2, "0")}:${match[2]}`;
+  }
+  const date = new Date(value);
+  if (!Number.isNaN(date.getTime())) {
+    return date.toLocaleTimeString("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "America/Mexico_City",
+    });
+  }
+  return text;
+}
