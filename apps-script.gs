@@ -8,6 +8,7 @@ const CONFIG = {
   SECRET_TOKEN: 'CAMBIAR_POR_EL_MISMO_SECRET_TOKEN_DE_VERCEL',
 
   MAX_RESERVAS_POR_CLIENTE_POR_DIA: 3,
+  MAX_RESERVAS_POR_IP_POR_DIA: 8,
   MAX_CONTACTOS_POR_EMAIL_POR_DIA: 2,
   MAX_REGISTROS_TOTALES: 10000,
 
@@ -181,6 +182,11 @@ function crearReserva(data) {
     return { status: 'error', message: 'Límite de reservas alcanzado por hoy' };
   }
 
+  const ipHash = sanitizar(data.ipHash || 'unknown', 80);
+  if (ipHash && ipHash !== 'unknown' && !verificarRateLimit(ipHash, 'nuevaReservaIP', CONFIG.MAX_RESERVAS_POR_IP_POR_DIA)) {
+    return { status: 'error', message: 'Límite de reservas alcanzado desde esta conexión por hoy' };
+  }
+
   const sheet = obtenerHoja(CONFIG.SHEETS.RESERVAS);
   if (sheet && sheet.getLastRow() > CONFIG.MAX_REGISTROS_TOTALES) {
     return { status: 'error', message: 'Sistema temporalmente no disponible' };
@@ -201,16 +207,19 @@ function crearReserva(data) {
     personas: parseInt(data.personas, 10),
     notas: sanitizar(data.notas || '', 500),
     estado: 'confirmada',
-    timestamp: fechaHoraLegible(new Date())
+    timestamp: fechaHoraLegible(new Date()),
+    ipHash,
+    ipMasked: sanitizar(data.ipMasked || 'unknown', 80)
   };
 
   const targetSheet = obtenerOCrearHoja(CONFIG.SHEETS.RESERVAS, [
     'Codigo', 'Nombre', 'Telefono', 'Email', 'Fecha',
-    'Hora', 'Personas', 'Notas', 'Estado', 'Timestamp'
+    'Hora', 'Personas', 'Notas', 'Estado', 'Timestamp',
+    'IPHash', 'IPMasked'
   ]);
 
   const nextRow = targetSheet.getLastRow() + 1;
-  const range = targetSheet.getRange(nextRow, 1, 1, 10);
+  const range = targetSheet.getRange(nextRow, 1, 1, 12);
   range.setNumberFormat('@');
   range.setValues([[
     reservaLimpia.codigo,
@@ -222,7 +231,9 @@ function crearReserva(data) {
     reservaLimpia.personas,
     reservaLimpia.notas,
     reservaLimpia.estado,
-    reservaLimpia.timestamp
+    reservaLimpia.timestamp,
+    reservaLimpia.ipHash,
+    reservaLimpia.ipMasked
   ]]);
 
   try {
@@ -473,6 +484,13 @@ function obtenerOCrearHoja(nombre, headers) {
       .setFontWeight('bold')
       .setBackground('#D4738C')
       .setFontColor('#ffffff');
+  } else if (headers && headers.length) {
+    const currentHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), headers.length)).getValues()[0];
+    headers.forEach((header, index) => {
+      if (!currentHeaders[index]) {
+        sheet.getRange(1, index + 1).setValue(header);
+      }
+    });
   }
   return sheet;
 }

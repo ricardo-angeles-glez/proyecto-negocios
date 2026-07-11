@@ -672,6 +672,7 @@ function renderFilaReserva(reserva) {
             <td>
                 <div class="table-primary">${escapeHTML(reserva.nombre || '')}</div>
                 <div class="table-secondary">${escapeHTML(reserva.telefono || '')}</div>
+                ${reserva.ipMasked || reserva.ipHash ? `<div class="table-secondary">IP: ${escapeHTML(reserva.ipMasked || 'hash')} ${reserva.ipHash ? `· ${escapeHTML(String(reserva.ipHash).slice(0, 8))}` : ''}</div>` : ''}
             </td>
             <td>${escapeHTML(formatDateOnly(reserva.fecha))}</td>
             <td>${escapeHTML(formatTimeOnly(reserva.hora))}</td>

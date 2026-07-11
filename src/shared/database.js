@@ -57,10 +57,7 @@ class Database {
 
     // 2. Intentar guardar en Google Sheets
     try {
-      const response = await this.postGoogle({
-        action: "nuevaReserva",
-        ...reserva,
-      });
+      const response = await this.crearReservaRemota(reserva);
 
       if (response.status === "success") {
         console.log("Reserva guardada en Google Sheets");
@@ -83,6 +80,28 @@ class Database {
         error: "No se pudo conectar con Google Sheets",
       };
     }
+  }
+
+  async crearReservaRemota(reserva) {
+    try {
+      const response = await fetch("/api/create-reservation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reserva),
+      });
+
+      if (response.ok) return await response.json();
+      if (response.status !== 404) return await response.json();
+    } catch (error) {
+      if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+        throw error;
+      }
+    }
+
+    return this.postGoogle({
+      action: "nuevaReserva",
+      ...reserva,
+    });
   }
 
   async obtenerReservas(filtros = {}) {
@@ -347,6 +366,8 @@ class Database {
       personas: reserva.personas || reserva.Personas || "",
       notas: reserva.notas || reserva.Notas || "",
       estado: reserva.estado || reserva.Estado || "pendiente",
+      ipHash: reserva.ipHash || reserva.IPHash || "",
+      ipMasked: reserva.ipMasked || reserva.IPMasked || "",
     })).map((reserva) => ({
       ...reserva,
       fecha: normalizarFechaReserva(reserva.fecha),
